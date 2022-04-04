@@ -1,5 +1,6 @@
 import dotenv, { parse } from 'dotenv';
 import Binance, {
+  FuturesUserTradeResult,
   NewFuturesOrder,
   NewOrderSpot,
   OrderSide_LT,
@@ -20,27 +21,41 @@ const checkConnection = () => {
   return binanceClient.ping();
 };
 
-const entry = async (side: OrderSide_LT) => {
+const entry = async (
+  symbol: string,
+  setLeverage: number,
+  side: OrderSide_LT,
+  partialProfits: {
+    where: number;
+    qty: number;
+  }[]
+) => {
   const balances = await binanceClient.futuresAccountBalance();
-
   const balance = balances.find((item) => item.asset === 'BUSD');
 
-  console.log({ balance });
+  /* get precisions */
+  const info = await binanceClient.futuresExchangeInfo();
+  const symbolInfo = info.symbols.find((item) => item.symbol === symbol);
+  const { pricePrecision, quantityPrecision } =
+    symbolInfo as unknown as Symbol & {
+      pricePrecision: number;
+      quantityPrecision: number;
+    };
 
   const leverage = await binanceClient.futuresLeverage({
-    symbol: 'SOLBUSD',
-    leverage: 4,
+    symbol: symbol,
+    leverage: setLeverage,
   });
 
-  const trade = await binanceClient.trades({ symbol: 'SOLBUSD', limit: 1 });
+  const trade = await binanceClient.trades({ symbol: symbol, limit: 1 });
 
-  const qty = Math.floor(
+  const qty = (
     (parseFloat(balance.balance) * leverage.leverage) /
-      parseFloat(trade[0].price)
-  );
+    parseFloat(trade[0].price)
+  ).toFixed(quantityPrecision);
 
   const entryOrder: NewFuturesOrder = {
-    symbol: 'SOLBUSD',
+    symbol: symbol,
     type: 'MARKET',
     side: side,
     quantity: `${qty}`,
@@ -53,23 +68,21 @@ const entry = async (side: OrderSide_LT) => {
   console.log('--------------------- ----- ----------------------');
 
   // stoploss
-  const currentPosititon = (
-    await binanceClient.futuresUserTrades({
-      symbol: 'SOLBUSD',
-    })
-  ).pop();
+  const currentPosititon = await getPosition(symbol);
 
   let price =
-    parseFloat(currentPosititon.price) +
-    parseFloat(currentPosititon.price) * 0.005 * (side === 'BUY' ? -1 : 1);
+    parseFloat(currentPosititon.entryPrice) +
+    parseFloat(currentPosititon.entryPrice) * 0.005 * (side === 'BUY' ? -1 : 1);
+
+  const currentQty = Math.abs(parseFloat(currentPosititon.positionAmt));
 
   const stopLossOrder: NewFuturesOrder = {
-    symbol: 'SOLBUSD',
-    stopPrice: parseFloat(price.toFixed(2)),
+    symbol: symbol,
+    stopPrice: parseFloat(price.toFixed(pricePrecision)),
     closePosition: 'true',
     type: 'STOP_MARKET',
     side: side === 'BUY' ? 'SELL' : 'BUY',
-    quantity: `${currentPosititon.qty}`,
+    quantity: `${currentQty}`,
   };
 
   const executedStopLossOrder = await binanceClient.futuresOrder(stopLossOrder);
@@ -78,27 +91,53 @@ const entry = async (side: OrderSide_LT) => {
   console.log('--------------------- -------- ----------------------');
 
   // takeprofit
-  price =
-    parseFloat(currentPosititon.price) +
-    parseFloat(currentPosititon.price) * 0.04 * (side === 'BUY' ? 1 : -1);
+  partialProfits.forEach(async (item) => {
+    const price =
+      parseFloat(currentPosititon.entryPrice) +
+      parseFloat(currentPosititon.entryPrice) *
+        0.04 *
+        (side === 'BUY' ? 1 : -1) *
+        item.where;
 
-  const takeProfitOrder: NewFuturesOrder = {
-    symbol: 'SOLBUSD',
-    price: parseFloat(price.toFixed(2)),
-    type: 'LIMIT',
-    side: side === 'BUY' ? 'SELL' : 'BUY',
-    quantity: `${currentPosititon.qty}`,
-  };
+    const qty = (currentQty * item.qty).toFixed(quantityPrecision);
 
-  const executedTakeProfitOrder = await binanceClient.futuresOrder(
-    takeProfitOrder
+    console.log({ price, qty });
+
+    const takeProfitOrder: NewFuturesOrder = {
+      symbol: symbol,
+      price: parseFloat(price.toFixed(pricePrecision)),
+      type: 'LIMIT',
+      side: side === 'BUY' ? 'SELL' : 'BUY',
+      quantity: `${qty}`,
+    };
+
+    const executedTakeProfitOrder = await binanceClient.futuresOrder(
+      takeProfitOrder
+    );
+    console.log('--------------------- TAKEPROFIT ----------------------');
+    console.log({ executedTakeProfitOrder });
+    console.log('--------------------- -------- ----------------------');
+  });
+};
+
+const currentPositions = async () => {
+  const accountInfo = await binanceClient.futuresAccountInfo();
+
+  const positions = accountInfo.positions.filter(
+    (item) => parseFloat(item.entryPrice) > 0
   );
-  console.log('--------------------- TAKEPROFIT ----------------------');
-  console.log({ executedTakeProfitOrder });
-  console.log('--------------------- -------- ----------------------');
+  return positions;
+};
+
+const getPosition = async (symbol: string) => {
+  const positions = await currentPositions();
+
+  return positions.find((item) => item.symbol === symbol) || undefined;
 };
 
 export default {
   checkConnection,
+  currentPositions,
   entry,
+  getPosition,
 };
