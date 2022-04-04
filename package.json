@@ -18,12 +18,17 @@
     "@prisma/client": "^2.22.1",
     "axios": "^0.21.1",
     "binance-api-node": "^0.11.34",
+    "cors": "^2.8.5",
     "discord.js": "^12.5.3",
     "dotenv": "^9.0.1",
+    "express": "^4.17.3",
     "ffmpeg-static": "^4.4.0",
     "prisma": "^2.22.1"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.12",
+    "@types/express": "^4.17.13",
+    "@types/node": "^17.0.23",
     "@types/ws": "^7.4.2",
     "ts-node": "^9.1.1",
     "ts-node-dev": "^1.1.6",

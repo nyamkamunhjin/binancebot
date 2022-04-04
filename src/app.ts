@@ -1,10 +1,33 @@
 import Discord from 'discord.js';
 const client = new Discord.Client();
 import dotenv from 'dotenv';
+import cors from 'cors';
 import Binance from 'binance-api-node';
 import BinanceAPI from './binance/functions';
-dotenv.config();
 
+dotenv.config();
+import express from 'express';
+const app = express();
+app.use(cors());
+app.use(express.json());
+app.options('*', cors());
+
+app.get('/', (_req, res) => {
+  res.send('Success');
+});
+
+app.post('/entry', async (req, res) => {
+  console.log('entry');
+  const { side, symbol }: { side: string; symbol: string } = req.body;
+  await BinanceAPI.entry(symbol, 1, side === 'buy' ? 'BUY' : 'SELL', [
+    { where: 0.25, qty: 0.25 },
+    { where: 0.5, qty: 0.25 },
+    { where: 1, qty: 0.5 },
+  ]);
+  return res.json({ success: true });
+});
+
+app.listen(8083, () => console.log('listening on port', 8083));
 // const prisma = new PrismaClient();
 
 const binanceClient = Binance({
@@ -12,20 +35,6 @@ const binanceClient = Binance({
   apiSecret: process.env.BINANCE_SECRET_KEY,
   getTime: () => new Date().getTime(),
 });
-
-const main = async () => {
-  // const accountInfo = await binanceClient.futuresAccountInfo();
-  // console.log(
-  //   accountInfo.positions.filter((item) => parseFloat(item.entryPrice) > 0)
-  // );
-  // await BinanceAPI.entry('ETHBUSD', 1, 'SELL', [
-  //   { where: 0.25, qty: 0.25 },
-  //   { where: 0.5, qty: 0.25 },
-  //   { where: 1, qty: 0.5 },
-  // ]);
-};
-
-main();
 
 binanceClient.ws.futuresUser(async (msg) => {
   /* cancel all orders if there's no position */
