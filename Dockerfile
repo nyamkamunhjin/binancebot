@@ -15,11 +15,11 @@ COPY --from=builder /app/built ./built
 COPY --from=builder /app/node_modules ./node_modules
 
 
-ENV DISCORD_TOKEN=NzEyMzAyNzExNjgwNDAxNDA5.XsPlmA.FWc44oMFgqlNPyi7XzrfKdrX2Ko
-ENV DIALOGFLOW_TOKEN=475e2e258cd04b5ca2b309405f6eb177
+ENV DISCORD_TOKEN=*
+ENV DIALOGFLOW_TOKEN=*
 ENV BOT_NAME=aduuch
 ENV VOICE_API=http://172.104.34.197/nlp-web-demo/tts
-ENV DATABASE_URL=postgres://postgres:be7KY2GsgrxK4x7@db.vsibmkuaxynwffvkemix.supabase.co:6543/postgres
+ENV DATABASE_URL=*
 
 
 CMD ["node", "./built/app.js"]
