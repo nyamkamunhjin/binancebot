@@ -48,6 +48,11 @@ const entry = async (
     qty: number;
   }[]
 ) => {
+  sendNotifications(
+    `Entry ${symbol} Leverage: ${setLeverage}, Side: ${side} PartialProfits: ${JSON.stringify(
+      partialProfits
+    )}`
+  );
   const balances = await binanceClient.futuresAccountBalance();
   const balance = balances.find((item) => item.asset === 'BUSD');
 
@@ -188,4 +193,5 @@ export default {
   currentPositions,
   entry,
   getPosition,
+  sendNotifications,
 };

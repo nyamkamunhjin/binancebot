@@ -25,19 +25,25 @@ app.post('/entry', async (req, res) => {
     symbol,
     leverage,
   }: { side: string; symbol: string; leverage: number } = req.body;
-  await BinanceAPI.entry(
-    symbol,
-    leverage || 1,
-    side === 'buy' ? 'BUY' : 'SELL',
-    [
-      { where: 0.25, qty: 0.25 },
-      { where: 0.5, qty: 0.25 },
-      { where: 1, qty: 0.5 },
-    ]
-  );
+  try {
+    await BinanceAPI.entry(
+      symbol,
+      leverage || 1,
+      side === 'buy' ? 'BUY' : 'SELL',
+      [
+        { where: 0.25, qty: 0.25 },
+        { where: 0.5, qty: 0.25 },
+        { where: 1, qty: 0.5 },
+      ]
+    );
 
-  currentSymbol = symbol;
-  return res.json({ success: true });
+    currentSymbol = symbol;
+    return res.json({ success: true });
+  } catch (error) {
+    console.error(error);
+    BinanceAPI.sendNotifications(error.message);
+    return res.json({ success: false });
+  }
 });
 
 app.listen(8083, () => console.log('listening on port', 8083));
