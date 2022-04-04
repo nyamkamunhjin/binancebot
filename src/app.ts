@@ -5,6 +5,8 @@ import cors from 'cors';
 import Binance from 'binance-api-node';
 import BinanceAPI from './binance/functions';
 
+let currentSymbol: string;
+
 dotenv.config();
 import express from 'express';
 const app = express();
@@ -18,12 +20,23 @@ app.get('/', (_req, res) => {
 
 app.post('/entry', async (req, res) => {
   console.log('entry');
-  const { side, symbol }: { side: string; symbol: string } = req.body;
-  await BinanceAPI.entry(symbol, 1, side === 'buy' ? 'BUY' : 'SELL', [
-    { where: 0.25, qty: 0.25 },
-    { where: 0.5, qty: 0.25 },
-    { where: 1, qty: 0.5 },
-  ]);
+  const {
+    side,
+    symbol,
+    leverage,
+  }: { side: string; symbol: string; leverage: number } = req.body;
+  await BinanceAPI.entry(
+    symbol,
+    leverage || 1,
+    side === 'buy' ? 'BUY' : 'SELL',
+    [
+      { where: 0.25, qty: 0.25 },
+      { where: 0.5, qty: 0.25 },
+      { where: 1, qty: 0.5 },
+    ]
+  );
+
+  currentSymbol = symbol;
   return res.json({ success: true });
 });
 
@@ -42,7 +55,7 @@ binanceClient.ws.futuresUser(async (msg) => {
   if (positions.length === 0) {
     console.log('Cancelling all open orders');
     await binanceClient.futuresCancelAllOpenOrders({
-      symbol: 'ETHBUSD',
+      symbol: currentSymbol,
     });
   }
 });

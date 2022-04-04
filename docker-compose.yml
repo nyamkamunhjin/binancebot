@@ -1,0 +1,13 @@
+version: "3.9"
+services:
+  binancebot:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - 8083:8083
+    image: nyamkamunhjin/binance-bot
+      
