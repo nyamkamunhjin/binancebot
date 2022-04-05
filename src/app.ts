@@ -52,7 +52,7 @@ app.post('/entry', async (req, res) => {
   }
 });
 
-app.listen(8000, () => console.log('listening on port', 8000));
+app.listen(80, () => console.log('listening on port', 80));
 // const prisma = new PrismaClient();
 
 const binanceClient = Binance({
