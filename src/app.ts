@@ -5,7 +5,7 @@ import cors from 'cors';
 import Binance from 'binance-api-node';
 import BinanceAPI from './binance/functions';
 
-let currentSymbol: string;
+let currentSymbol: string = 'ETHBUSD';
 
 dotenv.config();
 import express from 'express';
@@ -14,8 +14,8 @@ app.use(cors());
 app.use(express.json());
 app.options('*', cors());
 
-app.get('/', (_req, res) => {
-  res.send('Success');
+app.get('/', async (_req, res) => {
+  res.json({ api: true, binance_api: await binanceClient.futuresPing() });
 });
 
 app.post('/entry', async (req, res) => {
@@ -24,15 +24,20 @@ app.post('/entry', async (req, res) => {
     side,
     symbol,
     leverage,
-  }: { side: string; symbol: string; leverage: number } = req.body;
+    entry,
+  }: { side: string; symbol: string; entry: string; leverage: number } =
+    req.body;
   try {
+    if (entry.toLowerCase() !== 'buy' || entry.toLowerCase() !== 'sell')
+      throw new Error('entry is not sell or buy');
     await BinanceAPI.entry(
       symbol,
       leverage || 1,
       side === 'buy' ? 'BUY' : 'SELL',
+      0.005,
+      0.01,
       [
-        { where: 0.25, qty: 0.25 },
-        { where: 0.5, qty: 0.25 },
+        { where: 0.5, qty: 0.5 },
         { where: 1, qty: 0.5 },
       ]
     );
@@ -46,7 +51,7 @@ app.post('/entry', async (req, res) => {
   }
 });
 
-app.listen(8083, () => console.log('listening on port', 8083));
+app.listen(80, () => console.log('listening on port', 80));
 // const prisma = new PrismaClient();
 
 const binanceClient = Binance({

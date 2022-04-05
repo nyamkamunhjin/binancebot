@@ -43,6 +43,8 @@ const entry = async (
   symbol: string,
   setLeverage: number,
   side: OrderSide_LT,
+  stoploss: number,
+  takeProfit: number,
   partialProfits: {
     where: number;
     qty: number;
@@ -110,7 +112,9 @@ const entry = async (
 
   let price =
     parseFloat(currentPosititon.entryPrice) +
-    parseFloat(currentPosititon.entryPrice) * 0.005 * (side === 'BUY' ? -1 : 1);
+    parseFloat(currentPosititon.entryPrice) *
+      stoploss *
+      (side === 'BUY' ? -1 : 1);
 
   const currentQty = Math.abs(parseFloat(currentPosititon.positionAmt));
 
@@ -139,7 +143,7 @@ const entry = async (
     const price =
       parseFloat(currentPosititon.entryPrice) +
       parseFloat(currentPosititon.entryPrice) *
-        0.04 *
+        takeProfit *
         (side === 'BUY' ? 1 : -1) *
         item.where;
 
