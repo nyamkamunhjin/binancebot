@@ -28,8 +28,9 @@ app.post('/entry', async (req, res) => {
   }: { side: string; symbol: string; entry: string; leverage: number } =
     req.body;
   try {
-    if (entry.toLowerCase() !== 'buy' || entry.toLowerCase() !== 'sell')
-      throw new Error('entry is not sell or buy');
+    if (!(entry.toLowerCase() === 'buy' || entry.toLowerCase() === 'sell')) {
+      throw new Error(`entry is not sell or buy ${entry.toLowerCase()}`);
+    }
     await BinanceAPI.entry(
       symbol,
       leverage || 1,
@@ -51,7 +52,7 @@ app.post('/entry', async (req, res) => {
   }
 });
 
-app.listen(80, () => console.log('listening on port', 80));
+app.listen(8000, () => console.log('listening on port', 8000));
 // const prisma = new PrismaClient();
 
 const binanceClient = Binance({
