@@ -8,6 +8,6 @@ services:
     env_file:
       - .env
     ports:
-      - 80:80
+      - 80:8000
     image: nyamkamunhjin/new-binance-bot
       

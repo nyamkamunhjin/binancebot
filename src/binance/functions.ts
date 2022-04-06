@@ -50,11 +50,6 @@ const entry = async (
     qty: number;
   }[]
 ) => {
-  sendNotifications(
-    `Entry ${symbol} Leverage: ${setLeverage}, Side: ${side} PartialProfits: ${JSON.stringify(
-      partialProfits
-    )}`
-  );
   const balances = await binanceClient.futuresAccountBalance();
   const balance = balances.find((item) => item.asset === 'BUSD');
 
@@ -102,6 +97,11 @@ const entry = async (
     console.log('--------------------- ENTRY ----------------------');
     console.log({ entry: executedEntryOrder });
     console.log('--------------------- ----- ----------------------');
+    sendNotifications(
+      `Entry ${symbol} Leverage: ${setLeverage}, Side: ${side} PartialProfits: ${JSON.stringify(
+        partialProfits
+      )}`
+    );
   } catch (error) {
     console.error(error);
     sendNotifications(error.message);
@@ -177,6 +177,45 @@ const entry = async (
   });
 };
 
+const setStoplossToEntry = async (symbol: string, side: OrderSide_LT) => {
+  /* get precisions */
+  const info = await binanceClient.futuresExchangeInfo();
+  const symbolInfo = info.symbols.find((item) => item.symbol === symbol);
+  const priceFilter = symbolInfo.filters.find(
+    (item) => item.filterType === 'PRICE_FILTER'
+  );
+  const tickSize = countDecimals(
+    parseFloat((priceFilter as any).tickSize as string)
+  );
+
+  const currentPosititon = await getPosition(symbol);
+  const currentQty = Math.abs(parseFloat(currentPosititon.positionAmt));
+
+  const price = parseFloat(currentPosititon.entryPrice);
+
+  const stopLossOrder: NewFuturesOrder = {
+    symbol: symbol,
+    stopPrice: convertToPrecision(price, tickSize),
+    closePosition: 'true',
+    type: 'STOP_MARKET',
+    side: side,
+    quantity: `${currentQty}`,
+  };
+
+  try {
+    const executedStopLossOrder = await binanceClient.futuresOrder(
+      stopLossOrder
+    );
+    console.log('--------------------- STOPLOSS ----------------------');
+    console.log({ executedStopLossOrder });
+    console.log('--------------------- -------- ----------------------');
+    sendNotifications(`Moving stoploss to entry ${symbol} Side: ${side}`);
+  } catch (error) {
+    console.error(error);
+    sendNotifications(error.message);
+  }
+};
+
 const currentPositions = async () => {
   const accountInfo = await binanceClient.futuresAccountInfo();
 
@@ -198,4 +237,5 @@ export default {
   entry,
   getPosition,
   sendNotifications,
+  setStoplossToEntry,
 };

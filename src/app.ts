@@ -5,6 +5,12 @@ import cors from 'cors';
 import Binance from 'binance-api-node';
 import BinanceAPI from './binance/functions';
 
+const binanceClient = Binance({
+  apiKey: process.env.BINANCE_API_KEY,
+  apiSecret: process.env.BINANCE_SECRET_KEY,
+  getTime: () => new Date().getTime(),
+});
+
 let currentSymbol: string = 'ETHBUSD';
 
 dotenv.config();
@@ -28,9 +34,21 @@ app.post('/entry', async (req, res) => {
   }: { side: string; symbol: string; entry: string; leverage: number } =
     req.body;
   try {
-    if (!(entry.toLowerCase() === 'buy' || entry.toLowerCase() === 'sell')) {
-      throw new Error(`entry is not sell or buy ${entry.toLowerCase()}`);
+    /* if half profit target is hit move stoploss to entry price */
+    if (entry.toLowerCase() === 'half_profit') {
+      await BinanceAPI.setStoplossToEntry(
+        symbol,
+        side === 'buy' ? 'BUY' : 'SELL'
+      );
+      currentSymbol = symbol;
+      return res.json({ success: true });
     }
+
+    /* market buy/sell entry on pair */
+    if (!(entry.toLowerCase() === 'buy' || entry.toLowerCase() === 'sell')) {
+      throw new Error(`entry is not sell or buy "${entry.toLowerCase()}"`);
+    }
+    // entry
     await BinanceAPI.entry(
       symbol,
       leverage || 1,
@@ -52,15 +70,6 @@ app.post('/entry', async (req, res) => {
   }
 });
 
-app.listen(80, () => console.log('listening on port', 80));
-// const prisma = new PrismaClient();
-
-const binanceClient = Binance({
-  apiKey: process.env.BINANCE_API_KEY,
-  apiSecret: process.env.BINANCE_SECRET_KEY,
-  getTime: () => new Date().getTime(),
-});
-
 binanceClient.ws.futuresUser(async (msg) => {
   /* cancel all orders if there's no position */
   const positions = await BinanceAPI.currentPositions();
@@ -71,3 +80,7 @@ binanceClient.ws.futuresUser(async (msg) => {
     });
   }
 });
+
+app.listen(process.env.PORT, () =>
+  console.log('listening on port', process.env.PORT)
+);
