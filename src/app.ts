@@ -53,12 +53,9 @@ app.post('/entry', async (req, res) => {
       symbol,
       leverage || 1,
       side === 'buy' ? 'BUY' : 'SELL',
-      0.005,
       0.01,
-      [
-        { where: 0.5, qty: 0.5 },
-        { where: 1, qty: 0.5 },
-      ]
+      0.01,
+      [{ where: 1, qty: 1 }]
     );
 
     currentSymbol = symbol;
