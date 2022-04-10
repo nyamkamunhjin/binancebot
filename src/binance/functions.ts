@@ -76,8 +76,9 @@ const entry = async (
 
   const trade = await binanceClient.trades({ symbol: symbol, limit: 1 });
 
+  /* added 0.99 multiplication due to margin being insufficient */
   const qty = convertToPrecision(
-    (parseFloat(balance.balance) * leverage.leverage) /
+    (parseFloat(balance.balance) * 0.99 * leverage.leverage) /
       parseFloat(trade[0].price),
     quantityPrecision
   );
