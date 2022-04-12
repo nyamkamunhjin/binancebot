@@ -1,1 +1,1 @@
-# discordBot
+# Binance automatic trading bot

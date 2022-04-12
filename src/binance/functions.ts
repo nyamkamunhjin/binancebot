@@ -232,6 +232,30 @@ const getPosition = async (symbol: string) => {
   return positions.find((item) => item.symbol === symbol) || undefined;
 };
 
+const getCurrentBalance = async (symbol: string) => {
+  const balances = await binanceClient.futuresAccountBalance();
+  const balance = balances.find((item) => item.asset === 'BUSD');
+  return balance;
+};
+
+const getTradeHistory = async (symbol: string, limit: number) => {
+  const trade = await binanceClient.futuresUserTrades({
+    symbol,
+    limit,
+  });
+  console.log(trade);
+
+  return trade.flatMap((each) => {
+    if (parseFloat(each.realizedPnl) === 0) return [];
+
+    return {
+      realizedPnL: each.realizedPnl,
+      commission: each.commission,
+      date: new Date(each.time),
+    };
+  });
+};
+
 export default {
   checkConnection,
   currentPositions,
@@ -239,4 +263,6 @@ export default {
   getPosition,
   sendNotifications,
   setStoplossToEntry,
+  getCurrentBalance,
+  getTradeHistory,
 };

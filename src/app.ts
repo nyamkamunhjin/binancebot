@@ -1,9 +1,13 @@
 import Discord from 'discord.js';
-const client = new Discord.Client();
 import dotenv from 'dotenv';
 import cors from 'cors';
 import Binance from 'binance-api-node';
 import BinanceAPI from './binance/functions';
+import { client } from './discord/bot';
+
+import express, { Router } from 'express';
+
+import { StatsContoller } from './controller';
 
 const binanceClient = Binance({
   apiKey: process.env.BINANCE_API_KEY,
@@ -11,12 +15,17 @@ const binanceClient = Binance({
   getTime: () => new Date().getTime(),
 });
 
+/* Routes */
+const router = Router();
+router.use('/stats', StatsContoller());
+/* ------ */
+
 let currentSymbol: string = 'ETHBUSD';
 
 dotenv.config();
-import express from 'express';
 const app = express();
 app.use(cors());
+app.use('/api/v1/', router);
 app.use(express.json());
 app.options('*', cors());
 
@@ -67,6 +76,10 @@ app.post('/entry', async (req, res) => {
   }
 });
 
+app.listen(process.env.PORT, () =>
+  console.log('listening on port', process.env.PORT)
+);
+
 binanceClient.ws.futuresUser(async (msg) => {
   /* cancel all orders if there's no position */
   const positions = await BinanceAPI.currentPositions();
@@ -75,9 +88,14 @@ binanceClient.ws.futuresUser(async (msg) => {
     await binanceClient.futuresCancelAllOpenOrders({
       symbol: currentSymbol,
     });
+
+    // update discord bot status
+    const balance = await BinanceAPI.getCurrentBalance('BUSD');
+    client.user.setPresence({
+      activity: {
+        type: 'WATCHING',
+        name: `$${parseFloat(balance.balance).toFixed(2)}`,
+      },
+    });
   }
 });
-
-app.listen(process.env.PORT, () =>
-  console.log('listening on port', process.env.PORT)
-);
