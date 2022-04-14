@@ -7,6 +7,7 @@ import Binance, {
   OrderType,
 } from 'binance-api-node';
 import axios from 'axios';
+import moment from 'moment';
 
 dotenv.config();
 
@@ -243,16 +244,13 @@ const getTradeHistory = async (symbol: string, limit: number) => {
     symbol,
     limit,
   });
+
   console.log(trade);
 
   return trade.flatMap((each) => {
     if (parseFloat(each.realizedPnl) === 0) return [];
 
-    return {
-      realizedPnL: each.realizedPnl,
-      commission: each.commission,
-      date: new Date(each.time),
-    };
+    return each;
   });
 };
 

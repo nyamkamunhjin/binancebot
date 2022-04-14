@@ -1,3 +1,4 @@
+import { FuturesUserTradeResult } from 'binance-api-node';
 import Discord from 'discord.js';
 import dotenv from 'dotenv';
 import { prependListener } from 'process';
@@ -20,19 +21,29 @@ client.login(process.env.DISCORD_TOKEN).then(async () => {
 
 client.on('message', async (message) => {
   if (message.content == `!trade-history`) {
-    const tradeHistory = await BinanceAPI.getTradeHistory('ETHBUSD', 50);
+    const tradeHistory: FuturesUserTradeResult[] =
+      await BinanceAPI.getTradeHistory('ETHBUSD', 50);
+
     const newEmbed = new Discord.MessageEmbed()
       .setTitle('ETHBUSD')
       .setDescription('Last 50 trade PnL')
       .addFields(
-        tradeHistory.map((item) => ({
-          name: `Profit and Loss (${item.date.toISOString().slice(0, 10)})`,
-          value: `${parseFloat(item.realizedPnL).toPrecision(2)}$ ${
-            parseFloat(item.realizedPnL) > 0 ? '✅' : '❌'
-          }`,
-          fee: item.commission,
-          // inline: true,
-        }))
+        tradeHistory.map((item) => {
+          const [realizedPnl, fee] = [
+            parseFloat(item.realizedPnl),
+            parseFloat(item.commission),
+          ];
+
+          return {
+            name: `Profit and Loss (${new Date(
+              item.time
+            ).toLocaleDateString()})`,
+            value: `${parseFloat(item.realizedPnl) > 0 ? '✅' : '❌'} ${(
+              realizedPnl - fee
+            ).toPrecision(2)}$`,
+            // inline: true,
+          };
+        })
       );
     message.channel.send(newEmbed);
   }
