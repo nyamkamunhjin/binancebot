@@ -24,27 +24,22 @@ client.on('message', async (message) => {
     const tradeHistory: FuturesUserTradeResult[] =
       await BinanceAPI.getTradeHistory('ETHBUSD', 50);
 
-    const newEmbed = new Discord.MessageEmbed()
-      .setTitle('ETHBUSD')
-      .setDescription('Last 50 trade PnL')
-      .addFields(
-        tradeHistory.map((item) => {
-          const [realizedPnl, fee] = [
-            parseFloat(item.realizedPnl),
-            parseFloat(item.commission),
-          ];
+    const newEmbed = new Discord.MessageEmbed().setTitle('ETHBUSD').addFields(
+      tradeHistory.map((item) => {
+        const [realizedPnl, fee] = [
+          parseFloat(item.realizedPnl),
+          parseFloat(item.commission),
+        ];
 
-          return {
-            name: `Profit and Loss (${new Date(
-              item.time
-            ).toLocaleDateString()})`,
-            value: `${parseFloat(item.realizedPnl) > 0 ? '✅' : '❌'} ${(
-              realizedPnl - fee
-            ).toPrecision(2)}$`,
-            // inline: true,
-          };
-        })
-      );
+        return {
+          name: `Profit and Loss (${new Date(item.time).toLocaleString()})`,
+          value: `${parseFloat(item.realizedPnl) > 0 ? '✅' : '❌'} ${(
+            realizedPnl - fee
+          ).toPrecision(2)}$`,
+          // inline: true,
+        };
+      })
+    );
     message.channel.send(newEmbed);
   }
 });
