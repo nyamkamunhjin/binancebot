@@ -20,7 +20,7 @@ const router = Router();
 router.use('/stats', StatsContoller());
 /* ------ */
 
-let currentSymbol: string = 'ETHBUSD';
+let currentSymbol: string = 'SOLBUSD';
 
 dotenv.config();
 const app = express();
@@ -64,7 +64,10 @@ app.post('/entry', async (req, res) => {
       side === 'buy' ? 'BUY' : 'SELL',
       0.01,
       0.01,
-      [{ where: 1, qty: 1 }]
+      [
+        { where: 0.5, qty: 0.5 },
+        { where: 1, qty: 0.5 },
+      ]
     );
 
     currentSymbol = symbol;
