@@ -22,9 +22,9 @@ client.login(process.env.DISCORD_TOKEN).then(async () => {
 client.on('message', async (message) => {
   if (message.content == `!trade-history`) {
     const tradeHistory: FuturesUserTradeResult[] =
-      await BinanceAPI.getTradeHistory('SOLBUSD', 50);
+      await BinanceAPI.getTradeHistory('BNBBUSD', 50);
 
-    const newEmbed = new Discord.MessageEmbed().setTitle('SOLBUSD').addFields(
+    const newEmbed = new Discord.MessageEmbed().setTitle('BNBBUSD').addFields(
       tradeHistory.map((item) => {
         const [realizedPnl, fee] = [
           parseFloat(item.realizedPnl),

@@ -19,7 +19,7 @@ class Controller {
   public async getStats(req: Request, res: Response, next: NextFunction) {
     try {
       const trade = await binanceClient.futuresUserTrades({
-        symbol: 'SOLBUSD',
+        symbol: 'BNBBUSD',
         limit: 50,
       });
 
