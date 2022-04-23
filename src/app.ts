@@ -20,7 +20,7 @@ const router = Router();
 router.use('/stats', StatsContoller());
 /* ------ */
 
-let currentSymbol: string = 'BNBBUSD';
+let currentSymbol: string = 'BTCBUSD';
 
 dotenv.config();
 const app = express();
@@ -62,12 +62,9 @@ app.post('/entry', async (req, res) => {
       symbol,
       leverage || 1,
       side === 'buy' ? 'BUY' : 'SELL',
-      0.01,
-      0.05,
-      [
-        { where: 0.5, qty: 0.5 },
-        { where: 1, qty: 0.5 },
-      ]
+      0.004,
+      0.005,
+      [{ where: 1, qty: 1 }]
     );
 
     currentSymbol = symbol;
