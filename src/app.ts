@@ -20,7 +20,16 @@ const router = Router();
 router.use('/stats', StatsContoller());
 /* ------ */
 
-let currentSymbol: string = 'BTCBUSD';
+let currentSymbol: string = 'BNBBUSD';
+interface BodyInterface {
+  side: string;
+  symbol: string;
+  entry: string;
+  leverage: number;
+  stopLoss: number;
+  takeProfit: number;
+  partialProfits: { where: number; qty: number }[];
+}
 
 dotenv.config();
 const app = express();
@@ -40,11 +49,13 @@ app.post('/entry', async (req, res) => {
     symbol,
     leverage,
     entry,
-  }: { side: string; symbol: string; entry: string; leverage: number } =
-    req.body;
+    stopLoss,
+    takeProfit,
+    partialProfits,
+  }: BodyInterface = req.body;
   try {
     /* if half profit target is hit move stoploss to entry price */
-    if (entry.toLowerCase() === 'half_profit') {
+    if (entry.toLowerCase() === 'profit_50') {
       await BinanceAPI.setStoplossToEntry(
         symbol,
         side === 'buy' ? 'BUY' : 'SELL'
@@ -58,13 +69,25 @@ app.post('/entry', async (req, res) => {
       throw new Error(`entry is not sell or buy "${entry.toLowerCase()}"`);
     }
     // entry
+    // await BinanceAPI.entry(
+    //   symbol,
+    //   leverage || 1,
+    //   side === 'buy' ? 'BUY' : 'SELL',
+    //   0.01,
+    //   0.05,
+    //   [
+    //     { where: 0.5, qty: 0.5 },
+    //     { where: 1, qty: 0.5 },
+    //   ]
+    // );
+
     await BinanceAPI.entry(
       symbol,
       leverage || 1,
       side === 'buy' ? 'BUY' : 'SELL',
-      0.004,
-      0.005,
-      [{ where: 1, qty: 1 }]
+      stopLoss,
+      takeProfit,
+      partialProfits
     );
 
     currentSymbol = symbol;
