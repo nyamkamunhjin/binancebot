@@ -11,7 +11,7 @@ on:
 jobs:
   build-docker:
     runs-on: self-hosted
-
+    environment: Production
     steps:
       - uses: actions/checkout@v2
       - name: build and deploy
