@@ -5,8 +5,13 @@ services:
       context: .
       dockerfile: ./Dockerfile
     restart: always
-    env_file:
-      - .env
+    # env_file:
+    #   - .env
+    environment:
+      - BINANCE_API_KEY=${BINANCE_KEY}
+      - DISCORD_TOKEN=${DISCORD_TOKEN}
+      - BINANCE_SECRET_KEY=${BINANCE_SECRET_KEY}
+      - PORT=8000
     ports:
       - 80:8000
     image: nyamkamunhjin/new-binance-bot
