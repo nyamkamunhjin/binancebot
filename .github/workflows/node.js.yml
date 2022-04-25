@@ -14,14 +14,11 @@ jobs:
     environment: Production
     steps:
       - uses: actions/checkout@v2
-      - name: create env file
-      run: |
-        touch .env
-        echo VARIABLE=${{ secrets.BINANCE_API_KEY }} >> .env
-        echo VARIABLE=${{ secrets.DISCORD_TOKEN }} >> .env
-        echo VARIABLE=${{ secrets.BINANCE_SECRET_KEY }} >> .env
-        echo VARIABLE=${{ secrets.PORT }} >> .env
-
       - name: build and deploy
         run: |
+          touch .env
+          echo VARIABLE=${{ secrets.BINANCE_API_KEY }} >> .env
+          echo VARIABLE=${{ secrets.DISCORD_TOKEN }} >> .env
+          echo VARIABLE=${{ secrets.BINANCE_SECRET_KEY }} >> .env
+          echo VARIABLE=${{ secrets.PORT }} >> .env
           docker-compose up -d --build
