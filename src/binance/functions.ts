@@ -40,6 +40,15 @@ const checkConnection = () => {
   return binanceClient.ping();
 };
 
+const currentPositions = async () => {
+  const accountInfo = await binanceClient.futuresAccountInfo();
+
+  const positions = accountInfo.positions.filter(
+    (item) => parseFloat(item.entryPrice) > 0
+  );
+  return positions;
+};
+
 const entry = async (
   symbol: string,
   setLeverage: number,
@@ -51,6 +60,13 @@ const entry = async (
     qty: number;
   }[]
 ) => {
+  /* no entry on current position */
+  const positions = await currentPositions();
+  if (positions.length > 0) {
+    console.log('Cancelled opening position');
+    throw new Error('Currently in a trade.');
+  }
+
   const balances = await binanceClient.futuresAccountBalance();
   const balance = balances.find((item) => item.asset === 'BUSD');
 
@@ -238,15 +254,6 @@ const setStoplossToEntry = async (symbol: string, side: OrderSide_LT) => {
     console.error(error);
     sendNotifications(error.message);
   }
-};
-
-const currentPositions = async () => {
-  const accountInfo = await binanceClient.futuresAccountInfo();
-
-  const positions = accountInfo.positions.filter(
-    (item) => parseFloat(item.entryPrice) > 0
-  );
-  return positions;
 };
 
 const getPosition = async (symbol: string) => {
