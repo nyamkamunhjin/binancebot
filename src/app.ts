@@ -54,6 +54,28 @@ app.post('/entry', async (req, res) => {
     partialProfits,
   }: BodyInterface = req.body;
   try {
+    if (entry.toLowerCase() === 'profit_25') {
+      await BinanceAPI.setStoploss(
+        symbol,
+        'profit_25',
+        takeProfit,
+        side === 'buy' ? 'BUY' : 'SELL'
+      );
+      currentSymbol = symbol;
+      return res.json({ success: true });
+    }
+
+    if (entry.toLowerCase() === 'profit_50') {
+      await BinanceAPI.setStoploss(
+        symbol,
+        'profit_50',
+        takeProfit,
+        side === 'buy' ? 'BUY' : 'SELL'
+      );
+      currentSymbol = symbol;
+      return res.json({ success: true });
+    }
+
     /* if half profit target is hit move stoploss to entry price */
     if (entry.toLowerCase() === 'profit_50') {
       await BinanceAPI.setStoploss(
