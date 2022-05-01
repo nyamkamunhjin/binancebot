@@ -20,7 +20,7 @@ const router = Router();
 router.use('/stats', StatsContoller());
 /* ------ */
 
-let currentSymbol: string = 'ETHBUSD';
+let currentSymbol: string = 'BTCBUSD';
 interface BodyInterface {
   side: string;
   symbol: string;
@@ -123,5 +123,4 @@ binanceClient.ws.futuresUser(async (msg) => {
   }
 });
 
-setInterval(() =>BinanceAPI.updateBalance(client), 1000 * 60)
-
+setInterval(() => BinanceAPI.updateBalance(client), 1000 * 60);
