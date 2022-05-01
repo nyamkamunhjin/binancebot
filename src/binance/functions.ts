@@ -218,7 +218,12 @@ const entry = async (
   });
 };
 
-const setStoplossToEntry = async (symbol: string, side: OrderSide_LT) => {
+const setStoploss = async (
+  symbol: string,
+  type: 'profit_25' | 'profit_50',
+  takeProfit: number,
+  side: OrderSide_LT
+) => {
   /* get precisions */
   const info = await binanceClient.futuresExchangeInfo();
   const symbolInfo = info.symbols.find((item) => item.symbol === symbol);
@@ -232,7 +237,19 @@ const setStoplossToEntry = async (symbol: string, side: OrderSide_LT) => {
   const currentPosititon = await getPosition(symbol);
   const currentQty = Math.abs(parseFloat(currentPosititon.positionAmt));
 
-  const price = parseFloat(currentPosititon.entryPrice);
+  let price;
+  if (type === 'profit_25') {
+    price = parseFloat(currentPosititon.entryPrice);
+  }
+
+  if (type === 'profit_50') {
+    price =
+      parseFloat(currentPosititon.entryPrice) +
+      parseFloat(currentPosititon.entryPrice) *
+        takeProfit *
+        (side === 'BUY' ? 1 : -1) *
+        0.25;
+  }
 
   const stopLossOrder: NewFuturesOrder = {
     symbol: symbol,
@@ -284,7 +301,6 @@ const getTradeHistory = async (symbol: string, limit: number) => {
   });
 };
 
-
 const updateBalance = async (client: Discord.Client) => {
   // update discord bot status
   const balance = await getCurrentBalance('BUSD');
@@ -294,7 +310,7 @@ const updateBalance = async (client: Discord.Client) => {
       name: `$${parseFloat(balance.balance).toFixed(2)}`,
     },
   });
-}
+};
 
 export default {
   checkConnection,
@@ -302,7 +318,7 @@ export default {
   entry,
   getPosition,
   sendNotifications,
-  setStoplossToEntry,
+  setStoploss,
   getCurrentBalance,
   getTradeHistory,
   updateBalance,

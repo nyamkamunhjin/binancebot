@@ -56,8 +56,10 @@ app.post('/entry', async (req, res) => {
   try {
     /* if half profit target is hit move stoploss to entry price */
     if (entry.toLowerCase() === 'profit_50') {
-      await BinanceAPI.setStoplossToEntry(
+      await BinanceAPI.setStoploss(
         symbol,
+        'profit_50',
+        takeProfit,
         side === 'buy' ? 'BUY' : 'SELL'
       );
       currentSymbol = symbol;
