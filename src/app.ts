@@ -20,7 +20,7 @@ const router = Router();
 router.use('/stats', StatsContoller());
 /* ------ */
 
-let currentSymbol: string = 'BTCBUSD';
+let currentSymbol: string = 'ETHBUSD';
 interface BodyInterface {
   side: string;
   symbol: string;
