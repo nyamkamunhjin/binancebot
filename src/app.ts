@@ -122,3 +122,6 @@ binanceClient.ws.futuresUser(async (msg) => {
     });
   }
 });
+
+setInterval(() =>BinanceAPI.updateBalance(client), 1000 * 60)
+

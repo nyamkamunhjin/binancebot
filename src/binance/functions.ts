@@ -1,3 +1,4 @@
+import Discord from 'discord.js';
 import dotenv, { parse } from 'dotenv';
 import Binance, {
   FuturesUserTradeResult,
@@ -283,6 +284,18 @@ const getTradeHistory = async (symbol: string, limit: number) => {
   });
 };
 
+
+const updateBalance = async (client: Discord.Client) => {
+  // update discord bot status
+  const balance = await getCurrentBalance('BUSD');
+  client.user.setPresence({
+    activity: {
+      type: 'WATCHING',
+      name: `$${parseFloat(balance.balance).toFixed(2)}`,
+    },
+  });
+}
+
 export default {
   checkConnection,
   currentPositions,
@@ -292,4 +305,5 @@ export default {
   setStoplossToEntry,
   getCurrentBalance,
   getTradeHistory,
+  updateBalance,
 };
