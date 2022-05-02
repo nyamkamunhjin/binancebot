@@ -13,12 +13,9 @@ import moment from 'moment';
 dotenv.config();
 
 const sendNotifications = (message: string) => {
-  axios.post(
-    'https://discord.com/api/webhooks/952119031924682792/QomYbFPWTOHoEpP9594jUHQfrnRr86YAFvXlfsFdqoRopgA-Dm2NbAe8Wy7PzQ80sUX9',
-    {
-      content: message,
-    }
-  );
+  axios.post(process.env.DISCORD_WEBHOOK, {
+    content: message,
+  });
 };
 
 // const prisma = new PrismaClient();
