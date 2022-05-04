@@ -76,18 +76,6 @@ app.post('/entry', async (req, res) => {
       return res.json({ success: true });
     }
 
-    /* if half profit target is hit move stoploss to entry price */
-    if (entry.toLowerCase() === 'profit_50') {
-      await BinanceAPI.setStoploss(
-        symbol,
-        'profit_50',
-        takeProfit,
-        side === 'buy' ? 'BUY' : 'SELL'
-      );
-      currentSymbol = symbol;
-      return res.json({ success: true });
-    }
-
     /* market buy/sell entry on pair */
     if (!(entry.toLowerCase() === 'buy' || entry.toLowerCase() === 'sell')) {
       throw new Error(`entry is not sell or buy "${entry.toLowerCase()}"`);
