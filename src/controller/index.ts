@@ -18,13 +18,10 @@ const binanceClient = Binance({
 class Controller {
   public async getStats(req: Request, res: Response, next: NextFunction) {
     try {
-      const trade = await binanceClient.futuresUserTrades({
-        symbol: 'BNBBUSD',
-        limit: 50,
-      });
+      const trades = await BinanceAPI.getTradeHistory('BNBBUSD', 1);
 
       return res.json(
-        trade.map((each) => ({
+        trades.map((each) => ({
           realizedPnL: each.realizedPnl,
           commission: each.commission,
           date: new Date(each.time),

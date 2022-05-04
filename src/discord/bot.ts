@@ -22,23 +22,27 @@ client.login(process.env.DISCORD_TOKEN).then(async () => {
 client.on('message', async (message) => {
   if (message.content == `!trade-history`) {
     const tradeHistory: FuturesUserTradeResult[] =
-      await BinanceAPI.getTradeHistory('BNBBUSD', 50);
-
+      await BinanceAPI.getTradeHistory('BNBBUSD', 100);
+    // console.log(tradeHistory);
     const newEmbed = new Discord.MessageEmbed().setTitle('BNBBUSD').addFields(
-      tradeHistory.map((item) => {
-        const [realizedPnl, fee] = [
-          parseFloat(item.realizedPnl),
-          parseFloat(item.commission),
-        ];
+      tradeHistory
+        .slice(tradeHistory.length - 10, tradeHistory.length)
+        .map((item) => {
+          const [realizedPnl, fee] = [
+            parseFloat(item.realizedPnl),
+            parseFloat(item.commission),
+          ];
 
-        return {
-          name: `Profit and Loss (${new Date(item.time).toLocaleString()})`,
-          value: `${parseFloat(item.realizedPnl) > 0 ? '✅' : '❌'} ${(
-            realizedPnl - fee
-          ).toPrecision(2)}$`,
-          // inline: true,
-        };
-      })
+          return {
+            name: `Profit and Loss (${new Date(
+              new Date(item.time)
+            ).toLocaleString()})`,
+            value: `${parseFloat(item.realizedPnl) > 0 ? '✅' : '❌'} ${(
+              realizedPnl - fee
+            ).toPrecision(2)}$`,
+            // inline: true,
+          };
+        })
     );
     message.channel.send(newEmbed);
   }
@@ -48,11 +52,6 @@ client.on('message', async (message) => {
   if (message.content == `!balance`) {
     const balance = await BinanceAPI.getCurrentBalance('BUSD');
     message.channel.send(`$${parseFloat(balance.balance).toFixed(2)}`);
-    client.user.setPresence({
-      activity: {
-        type: 'WATCHING',
-        name: `$${parseFloat(balance.balance).toFixed(2)}`,
-      },
-    });
+    BinanceAPI.updateBalance(client);
   }
 });

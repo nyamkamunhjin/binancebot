@@ -289,7 +289,7 @@ const getTradeHistory = async (symbol: string, limit: number) => {
     limit,
   });
 
-  console.log(trade);
+  // console.log(trade);
 
   return trade.flatMap((each) => {
     if (parseFloat(each.realizedPnl) === 0) return [];
@@ -301,10 +301,31 @@ const getTradeHistory = async (symbol: string, limit: number) => {
 const updateBalance = async (client: Discord.Client) => {
   // update discord bot status
   const balance = await getCurrentBalance('BUSD');
+  const tradeHistory: FuturesUserTradeResult[] = await getTradeHistory(
+    'BNBBUSD',
+    1
+  );
+  let percent;
+  if (parseFloat(balance.balance) > parseFloat(tradeHistory[0].realizedPnl)) {
+    percent =
+      (parseFloat(tradeHistory[0].realizedPnl) /
+        (parseFloat(balance.balance) -
+          parseFloat(tradeHistory[0].realizedPnl))) *
+      100;
+  } else {
+    percent =
+      (parseFloat(tradeHistory[0].realizedPnl) /
+        (parseFloat(balance.balance) +
+          parseFloat(tradeHistory[0].realizedPnl))) *
+      100;
+  }
+
   client.user.setPresence({
     activity: {
       type: 'WATCHING',
-      name: `$${parseFloat(balance.balance).toFixed(2)}`,
+      name: `$${parseFloat(balance.balance).toFixed(2)} (${
+        percent > 0 ? '👍' : '👎'
+      }${percent.toPrecision(2)}%)`,
     },
   });
 };
