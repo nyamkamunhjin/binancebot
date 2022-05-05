@@ -1,6 +1,7 @@
 import Discord from 'discord.js';
 import dotenv, { parse } from 'dotenv';
 import Binance, {
+  FuturesAccountPosition,
   FuturesUserTradeResult,
   NewFuturesOrder,
   NewOrderSpot,
@@ -125,9 +126,9 @@ const entry = async (
     console.log('--------------------- ----- ----------------------');
     origQty = parseFloat(executedEntryOrder.origQty);
     sendNotifications(
-      `Entry ${symbol} Leverage: ${setLeverage}, Side: ${side} PartialProfits: ${JSON.stringify(
-        partialProfits
-      )}`
+      `Entry ${symbol} Leverage: ${setLeverage}, Side: ${side}, Price: ${
+        executedEntryOrder.price
+      },  PartialProfits: ${JSON.stringify(partialProfits)}`
     );
   } catch (error) {
     console.error(error);
@@ -135,15 +136,22 @@ const entry = async (
   }
 
   // stoploss
-  const currentPosititon = await getPosition(symbol);
+  let currentPosition: FuturesAccountPosition;
+  try {
+    while (currentPosition === undefined)
+      currentPosition = await getPosition(symbol);
+  } catch (error) {
+    console.error(error);
+    sendNotifications(error.message);
+  }
 
   let price =
-    parseFloat(currentPosititon.entryPrice) +
-    parseFloat(currentPosititon.entryPrice) *
+    parseFloat(currentPosition.entryPrice) +
+    parseFloat(currentPosition.entryPrice) *
       stoploss *
       (side === 'BUY' ? -1 : 1);
 
-  const currentQty = Math.abs(parseFloat(currentPosititon.positionAmt));
+  const currentQty = Math.abs(parseFloat(currentPosition.positionAmt));
 
   const stopLossOrder: NewFuturesOrder = {
     symbol: symbol,
@@ -157,6 +165,11 @@ const entry = async (
     const executedStopLossOrder = await binanceClient.futuresOrder(
       stopLossOrder
     );
+
+    sendNotifications('--------------------- STOPLOSS ----------------------');
+    sendNotifications(JSON.stringify(executedStopLossOrder));
+    sendNotifications('--------------------- -------- ----------------------');
+
     console.log('--------------------- STOPLOSS ----------------------');
     console.log({ executedStopLossOrder });
     console.log('--------------------- -------- ----------------------');
@@ -169,8 +182,8 @@ const entry = async (
   const previousQtys: number[] = [];
   partialProfits.forEach(async (item) => {
     const price =
-      parseFloat(currentPosititon.entryPrice) +
-      parseFloat(currentPosititon.entryPrice) *
+      parseFloat(currentPosition.entryPrice) +
+      parseFloat(currentPosition.entryPrice) *
         takeProfit *
         (side === 'BUY' ? 1 : -1) *
         item.where;
@@ -205,7 +218,13 @@ const entry = async (
       const executedTakeProfitOrder = await binanceClient.futuresOrder(
         takeProfitOrder
       );
-
+      sendNotifications(
+        '--------------------- TAKEPROFIT ----------------------'
+      );
+      sendNotifications(JSON.stringify(executedTakeProfitOrder));
+      sendNotifications(
+        '--------------------- -------- ----------------------'
+      );
       console.log('--------------------- TAKEPROFIT ----------------------');
       console.log({ executedTakeProfitOrder });
       console.log('--------------------- -------- ----------------------');
@@ -231,18 +250,18 @@ const setStoploss = async (
     parseFloat((priceFilter as any).tickSize as string)
   );
 
-  const currentPosititon = await getPosition(symbol);
-  const currentQty = Math.abs(parseFloat(currentPosititon.positionAmt));
+  const currentPosition = await getPosition(symbol);
+  const currentQty = Math.abs(parseFloat(currentPosition.positionAmt));
 
   let price;
   if (type === 'profit_25') {
-    price = parseFloat(currentPosititon.entryPrice);
+    price = parseFloat(currentPosition.entryPrice);
   }
 
   if (type === 'profit_50') {
     price =
-      parseFloat(currentPosititon.entryPrice) +
-      parseFloat(currentPosititon.entryPrice) *
+      parseFloat(currentPosition.entryPrice) +
+      parseFloat(currentPosition.entryPrice) *
         takeProfit *
         (side === 'SELL' ? 1 : -1) *
         0.25;
@@ -261,10 +280,16 @@ const setStoploss = async (
     const executedStopLossOrder = await binanceClient.futuresOrder(
       stopLossOrder
     );
-    console.log('--------------------- STOPLOSS ----------------------');
+    sendNotifications(
+      '--------------------- MOVE STOPLOSS ----------------------'
+    );
+    sendNotifications(JSON.stringify(executedStopLossOrder));
+    sendNotifications('--------------------- -------- ----------------------');
+
+    console.log('--------------------- MOVE STOPLOSS ----------------------');
     console.log({ executedStopLossOrder });
     console.log('--------------------- -------- ----------------------');
-    sendNotifications(`Moving stoploss to entry ${symbol} Side: ${side}`);
+    // sendNotifications(`Moving stoploss to entry ${symbol} Side: ${side}`);
   } catch (error) {
     console.error(error);
     sendNotifications(error.message);
@@ -305,6 +330,9 @@ const updateBalance = async (client: Discord.Client) => {
     'BNBBUSD',
     1
   );
+  if (tradeHistory.length === 0) return;
+  if (!tradeHistory[0].realizedPnl) return;
+
   let percent;
   if (parseFloat(balance.balance) > parseFloat(tradeHistory[0].realizedPnl)) {
     percent =

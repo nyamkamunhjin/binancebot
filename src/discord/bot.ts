@@ -23,6 +23,8 @@ client.on('message', async (message) => {
   if (message.content == `!trade-history`) {
     const tradeHistory: FuturesUserTradeResult[] =
       await BinanceAPI.getTradeHistory('BNBBUSD', 100);
+
+    if (tradeHistory.length === 0) return;
     // console.log(tradeHistory);
     const newEmbed = new Discord.MessageEmbed().setTitle('BNBBUSD').addFields(
       tradeHistory

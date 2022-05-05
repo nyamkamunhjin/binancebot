@@ -19,6 +19,7 @@ class Controller {
   public async getStats(req: Request, res: Response, next: NextFunction) {
     try {
       const trades = await BinanceAPI.getTradeHistory('BNBBUSD', 1);
+      if (trades.length === 0) return res.json({ success: false });
 
       return res.json(
         trades.map((each) => ({
