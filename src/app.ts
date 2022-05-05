@@ -1,7 +1,7 @@
 import Discord from 'discord.js';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import Binance from 'binance-api-node';
+import Binance, { FuturesAccountPosition } from 'binance-api-node';
 import BinanceAPI from './binance/functions';
 import { client } from './discord/bot';
 
@@ -136,3 +136,22 @@ binanceClient.ws.futuresUser(async (msg) => {
 });
 
 setInterval(() => BinanceAPI.updateBalance(client), 1000 * 60);
+const main = async () => {
+  /* test only */
+  let currentPosition: any;
+  try {
+    let count = 0;
+    while (currentPosition === undefined) {
+      count++;
+      console.log('trying', count);
+      currentPosition = await BinanceAPI.getPosition('BNBBUSD');
+      if (count === 10) {
+        currentPosition = 1;
+      }
+    }
+  } catch (error) {
+    console.error(error);
+  }
+// };
+
+// main();
