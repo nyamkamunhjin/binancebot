@@ -152,6 +152,6 @@ const main = async () => {
   } catch (error) {
     console.error(error);
   }
-// };
+};
 
 // main();
