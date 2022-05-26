@@ -281,9 +281,9 @@ const setStoploss = async (
       stopLossOrder
     );
     sendNotifications(
-      '--------------------- MOVE STOPLOSS ----------------------'
+      `--------------------- MOVE STOPLOSS ${type} ----------------------`
     );
-    sendNotifications(JSON.stringify(executedStopLossOrder));
+    // sendNotifications(JSON.stringify(executedStopLossOrder));
     sendNotifications('--------------------- -------- ----------------------');
 
     console.log('--------------------- MOVE STOPLOSS ----------------------');
