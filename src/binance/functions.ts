@@ -43,7 +43,7 @@ const currentPositions = async () => {
   const accountInfo = await binanceClient.futuresAccountInfo();
 
   const positions = accountInfo.positions.filter(
-    (item) => parseFloat(item.entryPrice) > 0
+    (item) => parseFloat(item.entryPrice) > 0 && item.symbol === 'BNBBUSD'
   );
   return positions;
 };
