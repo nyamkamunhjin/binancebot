@@ -135,7 +135,7 @@ binanceClient.ws.futuresUser(async (msg) => {
   }
 });
 
-setInterval(() => BinanceAPI.updateBalance(client), 1000 * 60);
+// setInterval(() => BinanceAPI.updateBalance(client), 1000 * 60);
 const main = async () => {
   /* test only */
   let currentPosition: any;
