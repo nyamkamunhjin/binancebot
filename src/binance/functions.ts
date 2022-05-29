@@ -166,9 +166,9 @@ const entry = async (
       stopLossOrder
     );
 
-    sendNotifications('--------------------- STOPLOSS ----------------------');
-    sendNotifications(JSON.stringify(executedStopLossOrder));
-    sendNotifications('--------------------- -------- ----------------------');
+    // sendNotifications('--------------------- STOPLOSS ----------------------');
+    // sendNotifications(JSON.stringify(executedStopLossOrder));
+    // sendNotifications('--------------------- -------- ----------------------');
 
     console.log('--------------------- STOPLOSS ----------------------');
     console.log({ executedStopLossOrder });
@@ -221,7 +221,7 @@ const entry = async (
       sendNotifications(
         '--------------------- TAKEPROFIT ----------------------'
       );
-      sendNotifications(JSON.stringify(executedTakeProfitOrder));
+      // sendNotifications(JSON.stringify(executedTakeProfitOrder));
       sendNotifications(
         '--------------------- -------- ----------------------'
       );
@@ -281,9 +281,9 @@ const setStoploss = async (
       stopLossOrder
     );
     sendNotifications(
-      '--------------------- MOVE STOPLOSS ----------------------'
+      `--------------------- MOVE STOPLOSS ${type} ----------------------`
     );
-    sendNotifications(JSON.stringify(executedStopLossOrder));
+    // sendNotifications(JSON.stringify(executedStopLossOrder));
     sendNotifications('--------------------- -------- ----------------------');
 
     console.log('--------------------- MOVE STOPLOSS ----------------------');
