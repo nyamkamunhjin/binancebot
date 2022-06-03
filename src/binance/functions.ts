@@ -121,9 +121,9 @@ const entry = async (
   let origQty: number = 0;
   try {
     const executedEntryOrder = await binanceClient.futuresOrder(entryOrder);
-    console.log('--------------------- ENTRY ----------------------');
+    console.log('ENTRY');
     console.log({ entry: executedEntryOrder });
-    console.log('--------------------- ----- ----------------------');
+    console.log('-----');
     origQty = parseFloat(executedEntryOrder.origQty);
     sendNotifications(
       `Entry ${symbol} Leverage: ${setLeverage}, Side: ${side}, Price: ${
@@ -166,13 +166,13 @@ const entry = async (
       stopLossOrder
     );
 
-    // sendNotifications('--------------------- STOPLOSS ----------------------');
+    // sendNotifications('STOPLOSS');
     // sendNotifications(JSON.stringify(executedStopLossOrder));
-    // sendNotifications('--------------------- -------- ----------------------');
+    // sendNotifications('--------');
 
-    console.log('--------------------- STOPLOSS ----------------------');
+    console.log('STOPLOSS');
     console.log({ executedStopLossOrder });
-    console.log('--------------------- -------- ----------------------');
+    console.log('--------');
   } catch (error) {
     console.error(error);
     sendNotifications(error.message);
@@ -218,16 +218,12 @@ const entry = async (
       const executedTakeProfitOrder = await binanceClient.futuresOrder(
         takeProfitOrder
       );
-      sendNotifications(
-        '--------------------- TAKEPROFIT ----------------------'
-      );
+      sendNotifications('TAKEPROFIT');
       // sendNotifications(JSON.stringify(executedTakeProfitOrder));
-      sendNotifications(
-        '--------------------- -------- ----------------------'
-      );
-      console.log('--------------------- TAKEPROFIT ----------------------');
+      sendNotifications('--------');
+      console.log('TAKEPROFIT');
       console.log({ executedTakeProfitOrder });
-      console.log('--------------------- -------- ----------------------');
+      console.log('--------');
     } catch (error) {
       console.error(error);
     }
@@ -280,15 +276,11 @@ const setStoploss = async (
     const executedStopLossOrder = await binanceClient.futuresOrder(
       stopLossOrder
     );
-    sendNotifications(
-      `--------------------- MOVE STOPLOSS ${type} ----------------------`
-    );
-    // sendNotifications(JSON.stringify(executedStopLossOrder));
-    sendNotifications('--------------------- -------- ----------------------');
+    sendNotifications(`MOVE STOPLOSS ${type}`);
 
-    console.log('--------------------- MOVE STOPLOSS ----------------------');
+    console.log('MOVE STOPLOSS');
     console.log({ executedStopLossOrder });
-    console.log('--------------------- -------- ----------------------');
+    console.log('--------');
     // sendNotifications(`Moving stoploss to entry ${symbol} Side: ${side}`);
   } catch (error) {
     console.error(error);
