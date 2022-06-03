@@ -22,11 +22,11 @@ client.login(process.env.DISCORD_TOKEN).then(async () => {
 client.on('message', async (message) => {
   if (message.content == `!trade-history`) {
     const tradeHistory: FuturesUserTradeResult[] =
-      await BinanceAPI.getTradeHistory('BNBBUSD', 100);
+      await BinanceAPI.getTradeHistory('ADABUSD', 100);
 
     if (tradeHistory.length === 0) return;
     // console.log(tradeHistory);
-    const newEmbed = new Discord.MessageEmbed().setTitle('BNBBUSD').addFields(
+    const newEmbed = new Discord.MessageEmbed().setTitle('ADABUSD').addFields(
       tradeHistory
         .slice(tradeHistory.length - 10, tradeHistory.length)
         .map((item) => {

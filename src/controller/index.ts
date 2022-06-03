@@ -18,7 +18,7 @@ const binanceClient = Binance({
 class Controller {
   public async getStats(req: Request, res: Response, next: NextFunction) {
     try {
-      const trades = await BinanceAPI.getTradeHistory('BNBBUSD', 1);
+      const trades = await BinanceAPI.getTradeHistory('ADABUSD', 1);
       if (trades.length === 0) return res.json({ success: false });
 
       return res.json(

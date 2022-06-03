@@ -43,7 +43,7 @@ const currentPositions = async () => {
   const accountInfo = await binanceClient.futuresAccountInfo();
 
   const positions = accountInfo.positions.filter(
-    (item) => parseFloat(item.entryPrice) > 0 && item.symbol === 'BNBBUSD'
+    (item) => parseFloat(item.entryPrice) > 0 && item.symbol === 'ADABUSD'
   );
   return positions;
 };
@@ -327,7 +327,7 @@ const updateBalance = async (client: Discord.Client) => {
   // update discord bot status
   const balance = await getCurrentBalance('BUSD');
   const tradeHistory: FuturesUserTradeResult[] = await getTradeHistory(
-    'BNBBUSD',
+    'ADABUSD',
     1
   );
   if (tradeHistory.length === 0) return;

@@ -20,7 +20,7 @@ const router = Router();
 router.use('/stats', StatsContoller());
 /* ------ */
 
-let currentSymbol: string = 'BNBBUSD';
+let currentSymbol: string = 'ADABUSD';
 interface BodyInterface {
   side: string;
   symbol: string;
@@ -144,7 +144,7 @@ const main = async () => {
     while (currentPosition === undefined) {
       count++;
       console.log('trying', count);
-      currentPosition = await BinanceAPI.getPosition('BNBBUSD');
+      currentPosition = await BinanceAPI.getPosition('ADABUSD');
       if (count === 10) {
         currentPosition = 1;
       }
