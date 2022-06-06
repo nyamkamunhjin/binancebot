@@ -1,9 +1,11 @@
 import Discord from 'discord.js';
-import dotenv from 'dotenv';
+
 import cors from 'cors';
 import Binance, { FuturesAccountPosition } from 'binance-api-node';
 import BinanceAPI from './binance/functions';
 import { client } from './discord/bot';
+import dotenv from 'dotenv';
+dotenv.config();
 
 import express, { Router } from 'express';
 
@@ -20,7 +22,7 @@ const router = Router();
 router.use('/stats', StatsContoller());
 /* ------ */
 
-let currentSymbol: string = 'ADABUSD';
+let currentSymbol: string = process.env.TRADE_PAIR;
 interface BodyInterface {
   side: string;
   symbol: string;
@@ -31,7 +33,6 @@ interface BodyInterface {
   partialProfits: { where: number; qty: number }[];
 }
 
-dotenv.config();
 const app = express();
 app.use(cors());
 app.use('/api/v1/', router);
@@ -39,7 +40,12 @@ app.use(express.json());
 app.options('*', cors());
 
 app.get('/', async (_req, res) => {
-  res.json({ api: true, binance_api: await binanceClient.futuresPing() });
+  res.json({
+    api: true,
+    binance_api: await binanceClient.futuresPing(),
+    currency: process.env.CURRENCY,
+    trade_pair: process.env.TRADE_PAIR,
+  });
 });
 
 app.post('/entry', async (req, res) => {
@@ -125,7 +131,7 @@ binanceClient.ws.futuresUser(async (msg) => {
     });
 
     // update discord bot status
-    const balance = await BinanceAPI.getCurrentBalance('BUSD');
+    const balance = await BinanceAPI.getCurrentBalance(process.env.CURRENCY);
     client.user.setPresence({
       activity: {
         type: 'WATCHING',
@@ -144,7 +150,7 @@ const main = async () => {
     while (currentPosition === undefined) {
       count++;
       console.log('trying', count);
-      currentPosition = await BinanceAPI.getPosition('ADABUSD');
+      currentPosition = await BinanceAPI.getPosition(process.env.TRADE_PAIR);
       if (count === 10) {
         currentPosition = 1;
       }

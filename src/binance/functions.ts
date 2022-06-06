@@ -1,16 +1,12 @@
 import Discord from 'discord.js';
-import dotenv, { parse } from 'dotenv';
 import Binance, {
   FuturesAccountPosition,
   FuturesUserTradeResult,
   NewFuturesOrder,
-  NewOrderSpot,
   OrderSide_LT,
-  OrderType,
 } from 'binance-api-node';
 import axios from 'axios';
-import moment from 'moment';
-
+import dotenv from 'dotenv';
 dotenv.config();
 
 const sendNotifications = (message: string) => {
@@ -43,7 +39,8 @@ const currentPositions = async () => {
   const accountInfo = await binanceClient.futuresAccountInfo();
 
   const positions = accountInfo.positions.filter(
-    (item) => parseFloat(item.entryPrice) > 0 && item.symbol === 'ADABUSD'
+    (item) =>
+      parseFloat(item.entryPrice) > 0 && item.symbol === process.env.TRADE_PAIR
   );
   return positions;
 };
@@ -67,7 +64,7 @@ const entry = async (
   }
 
   const balances = await binanceClient.futuresAccountBalance();
-  const balance = balances.find((item) => item.asset === 'BUSD');
+  const balance = balances.find((item) => item.asset === process.env.CURRENCY);
 
   /* get precisions */
   const info = await binanceClient.futuresExchangeInfo();
@@ -296,7 +293,7 @@ const getPosition = async (symbol: string) => {
 
 const getCurrentBalance = async (symbol: string) => {
   const balances = await binanceClient.futuresAccountBalance();
-  const balance = balances.find((item) => item.asset === 'BUSD');
+  const balance = balances.find((item) => item.asset === process.env.CURRENCY);
   return balance;
 };
 
@@ -317,9 +314,9 @@ const getTradeHistory = async (symbol: string, limit: number) => {
 
 const updateBalance = async (client: Discord.Client) => {
   // update discord bot status
-  const balance = await getCurrentBalance('BUSD');
+  const balance = await getCurrentBalance(process.env.CURRENCY);
   const tradeHistory: FuturesUserTradeResult[] = await getTradeHistory(
-    'ADABUSD',
+    process.env.TRADE_PAIR,
     1
   );
   if (tradeHistory.length === 0) return;

@@ -1,6 +1,8 @@
 import { NextFunction, Request, Response, Router } from 'express';
 import BinanceAPI from '../binance/functions';
 import Binance from 'binance-api-node';
+import dotenv, { parse } from 'dotenv';
+dotenv.config();
 
 /**
  * BindingType controller
@@ -18,7 +20,10 @@ const binanceClient = Binance({
 class Controller {
   public async getStats(req: Request, res: Response, next: NextFunction) {
     try {
-      const trades = await BinanceAPI.getTradeHistory('ADABUSD', 1);
+      const trades = await BinanceAPI.getTradeHistory(
+        process.env.TRADE_PAIR,
+        1
+      );
       if (trades.length === 0) return res.json({ success: false });
 
       return res.json(
@@ -37,7 +42,9 @@ class Controller {
   public async getBalance(req: Request, res: Response, next: NextFunction) {
     try {
       const balances = await binanceClient.futuresAccountBalance();
-      const balance = balances.find((item) => item.asset === 'BUSD');
+      const balance = balances.find(
+        (item) => item.asset === process.env.CURRENCY
+      );
 
       return res.json(balance);
     } catch (error) {
