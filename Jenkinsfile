@@ -1,23 +1,18 @@
 pipeline {
   agent any
   stages {
+    stage('authorization') {
+        echo -n {{password}} | docker login -u {{username}} --password-stdin
+    }
     stage('build') {
       steps {
-        echo 'building the bot'
+        docker build --progress=plain -t nyamkamunhjin/new-binance-bot .
       }
     }
-
-    stage('test') {
-      steps {
-        echo 'testing the bot'
-      }
-    }
-
     stage('deploy') {
       steps {
-        sh 'echo \'deploy\''
+        docker push nyamkamunhjin/new-binance-bot:latest
       }
     }
-
   }
 }
