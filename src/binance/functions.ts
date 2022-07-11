@@ -176,6 +176,35 @@ const entry = async (
   }
 
   // takeprofit
+
+  // set take_profit order
+  price =
+    parseFloat(currentPosition.entryPrice) +
+    parseFloat(currentPosition.entryPrice) *
+      takeProfit *
+      (side === 'BUY' ? 1 : -1);
+  const takeProfitOrder: NewFuturesOrder = {
+    symbol: symbol,
+    stopPrice: convertToPrecision(price, tickSize),
+    closePosition: 'true',
+    type: 'TAKE_PROFIT_MARKET',
+    side: side === 'BUY' ? 'SELL' : 'BUY',
+    quantity: `${currentQty}`,
+  };
+  try {
+    const executedTakeProfitOrder = await binanceClient.futuresOrder(
+      takeProfitOrder
+    );
+    sendNotifications('TAKEPROFIT');
+    sendNotifications(JSON.stringify(executedTakeProfitOrder));
+    // sendNotifications('--------');
+    // console.log('TAKEPROFIT');
+    console.log({ executedTakeProfitOrder });
+    // console.log('--------');
+  } catch (error) {
+    console.error(error);
+  }
+
   const previousQtys: number[] = [];
   partialProfits.forEach(async (item) => {
     const price =
@@ -216,11 +245,11 @@ const entry = async (
         takeProfitOrder
       );
       sendNotifications('TAKEPROFIT');
-      // sendNotifications(JSON.stringify(executedTakeProfitOrder));
-      sendNotifications('--------');
-      console.log('TAKEPROFIT');
+      sendNotifications(JSON.stringify(executedTakeProfitOrder));
+      // sendNotifications('--------');
+      // console.log('TAKEPROFIT');
       console.log({ executedTakeProfitOrder });
-      console.log('--------');
+      // console.log('--------');
     } catch (error) {
       console.error(error);
     }
@@ -231,6 +260,7 @@ const setStoploss = async (
   symbol: string,
   type: 'profit_25' | 'profit_50',
   takeProfit: number,
+  stopLoss: number,
   side: OrderSide_LT
 ) => {
   /* get precisions */
@@ -248,16 +278,16 @@ const setStoploss = async (
 
   let price;
   if (type === 'profit_25') {
-    price = parseFloat(currentPosition.entryPrice);
-  }
-
-  if (type === 'profit_50') {
     price =
       parseFloat(currentPosition.entryPrice) +
       parseFloat(currentPosition.entryPrice) *
-        takeProfit *
-        (side === 'SELL' ? 1 : -1) *
+        stopLoss *
+        (side === 'SELL' ? -1 : 1) *
         0.25;
+  }
+
+  if (type === 'profit_50') {
+    price = parseFloat(currentPosition.entryPrice);
   }
 
   const stopLossOrder: NewFuturesOrder = {

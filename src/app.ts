@@ -65,6 +65,7 @@ app.post('/entry', async (req, res) => {
         symbol,
         'profit_25',
         takeProfit,
+        stopLoss,
         side === 'buy' ? 'BUY' : 'SELL'
       );
       currentSymbol = symbol;
@@ -76,6 +77,7 @@ app.post('/entry', async (req, res) => {
         symbol,
         'profit_50',
         takeProfit,
+        stopLoss,
         side === 'buy' ? 'BUY' : 'SELL'
       );
       currentSymbol = symbol;
