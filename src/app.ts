@@ -1,7 +1,5 @@
-import Discord from 'discord.js';
-
 import cors from 'cors';
-import Binance, { FuturesAccountPosition } from 'binance-api-node';
+import Binance from 'binance-api-node';
 import BinanceAPI from './binance/functions';
 import { client } from './discord/bot';
 import dotenv from 'dotenv';
