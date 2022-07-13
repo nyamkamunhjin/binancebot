@@ -195,12 +195,7 @@ const entry = async (
     const executedTakeProfitOrder = await binanceClient.futuresOrder(
       takeProfitOrder
     );
-    sendNotifications('TAKEPROFIT');
-    sendNotifications(JSON.stringify(executedTakeProfitOrder));
-    // sendNotifications('--------');
-    // console.log('TAKEPROFIT');
     console.log({ executedTakeProfitOrder });
-    // console.log('--------');
   } catch (error) {
     console.error(error);
   }
@@ -244,8 +239,8 @@ const entry = async (
       const executedTakeProfitOrder = await binanceClient.futuresOrder(
         takeProfitOrder
       );
-      sendNotifications('TAKEPROFIT');
-      sendNotifications(JSON.stringify(executedTakeProfitOrder));
+      // sendNotifications('TAKEPROFIT');
+      // sendNotifications(JSON.stringify(executedTakeProfitOrder));
       // sendNotifications('--------');
       // console.log('TAKEPROFIT');
       console.log({ executedTakeProfitOrder });
@@ -283,7 +278,7 @@ const setStoploss = async (
       parseFloat(currentPosition.entryPrice) *
         stopLoss *
         (side === 'SELL' ? -1 : 1) *
-        0.25;
+        0.5;
   }
 
   if (type === 'profit_50') {
