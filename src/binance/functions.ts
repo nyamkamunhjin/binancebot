@@ -278,7 +278,7 @@ const setStoploss = async (
       parseFloat(currentPosition.entryPrice) *
         stopLoss *
         (side === 'SELL' ? -1 : 1) *
-        0.5;
+        0.25;
   }
 
   if (type === 'profit_50') {
