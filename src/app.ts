@@ -23,6 +23,7 @@ router.use('/stats', StatsContoller());
 let currentSymbol: string = process.env.TRADE_PAIR;
 interface BodyInterface {
   side: string;
+  price: string;
   symbol: string;
   entry: string;
   leverage: number;
@@ -51,6 +52,7 @@ app.post('/entry', async (req, res) => {
   const {
     side,
     symbol,
+    price,
     leverage,
     entry,
     stopLoss,
@@ -102,6 +104,7 @@ app.post('/entry', async (req, res) => {
     await BinanceAPI.entry(
       symbol,
       leverage || 1,
+      price,
       side === 'buy' ? 'BUY' : 'SELL',
       stopLoss,
       takeProfit,
