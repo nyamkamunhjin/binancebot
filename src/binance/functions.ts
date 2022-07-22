@@ -250,7 +250,7 @@ const entry = async (
 
 const setStoploss = async (
   symbol: string,
-  type: 'profit_25' | 'profit_50',
+  type: 'profit_25' | 'profit_50' | 'profit_75',
   takeProfit: number,
   stopLoss: number,
   side: OrderSide_LT
@@ -275,11 +275,20 @@ const setStoploss = async (
       parseFloat(currentPosition.entryPrice) *
         stopLoss *
         (side === 'SELL' ? -1 : 1) *
-        0.25;
+        0.5;
   }
 
   if (type === 'profit_50') {
     price = parseFloat(currentPosition.entryPrice);
+  }
+
+  if (type === 'profit_75') {
+    price =
+      parseFloat(currentPosition.entryPrice) +
+      parseFloat(currentPosition.entryPrice) *
+        takeProfit *
+        (side === 'SELL' ? 1 : -1) *
+        0.25;
   }
 
   const stopLossOrder: NewFuturesOrder = {
