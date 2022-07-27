@@ -95,7 +95,7 @@ const entry = async (
 
   /* added 0.99 multiplication due to margin being insufficient */
   const qty = convertToPrecision(
-    (parseFloat(balance.balance) * 0.95 * leverage.leverage) /
+    (parseFloat(balance.availableBalance) * 0.95 * leverage.leverage) /
       parseFloat(trade[0].price),
     quantityPrecision
   );
