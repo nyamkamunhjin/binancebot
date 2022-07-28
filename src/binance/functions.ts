@@ -10,9 +10,13 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const sendNotifications = (message: string) => {
-  axios.post(process.env.DISCORD_WEBHOOK, {
-    content: message,
-  });
+  try {
+    axios.post(process.env.DISCORD_WEBHOOK, {
+      content: message,
+    });
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 // const prisma = new PrismaClient();

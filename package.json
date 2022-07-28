@@ -15,16 +15,13 @@
   "license": "ISC",
   "dependencies": {
     "@discordjs/opus": "^0.5.0",
-    "@prisma/client": "^2.22.1",
     "axios": "^0.21.1",
-    "binance-api-node": "^0.11.34",
+    "binance-api-node": "^0.11.41",
     "cors": "^2.8.5",
     "discord.js": "^12.5.3",
     "dotenv": "^9.0.1",
     "express": "^4.17.3",
-    "ffmpeg-static": "^4.4.0",
-    "moment": "^2.29.2",
-    "prisma": "^2.22.1"
+    "moment": "^2.29.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.12",
