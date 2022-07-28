@@ -155,7 +155,7 @@ const entry = async (
 
   const stopLossOrder: NewFuturesOrder = {
     symbol: symbol,
-    stopPrice: convertToPrecision(price, tickSize),
+    stopPrice: convertToPrecision(price, tickSize) as any,
     closePosition: 'true',
     type: 'STOP_MARKET',
     side: side === 'BUY' ? 'SELL' : 'BUY',
@@ -186,7 +186,7 @@ const entry = async (
     parseFloat(entryPrice) * takeProfit * (side === 'BUY' ? 1 : -1);
   const takeProfitOrder: NewFuturesOrder = {
     symbol: symbol,
-    stopPrice: convertToPrecision(price, tickSize),
+    stopPrice: convertToPrecision(price, tickSize) as any,
     closePosition: 'true',
     type: 'TAKE_PROFIT_MARKET',
     side: side === 'BUY' ? 'SELL' : 'BUY',
@@ -228,9 +228,9 @@ const entry = async (
       converted: convertToPrecision(price, pricePrecision),
     });
 
-    const takeProfitOrder: NewFuturesOrder = {
+    const takeProfitOrder = {
       symbol: symbol,
-      price: convertToPrecision(price, tickSize),
+      price: convertToPrecision(price, tickSize) as any,
       type: 'LIMIT',
       side: side === 'BUY' ? 'SELL' : 'BUY',
       quantity: `${qty}`,
@@ -238,7 +238,7 @@ const entry = async (
 
     try {
       const executedTakeProfitOrder = await binanceClient.futuresOrder(
-        takeProfitOrder
+        takeProfitOrder as any
       );
       // sendNotifications('TAKEPROFIT');
       // sendNotifications(JSON.stringify(executedTakeProfitOrder));
@@ -297,7 +297,7 @@ const setStoploss = async (
 
   const stopLossOrder: NewFuturesOrder = {
     symbol: symbol,
-    stopPrice: convertToPrecision(price, tickSize),
+    stopPrice: convertToPrecision(price, tickSize) as any,
     closePosition: 'true',
     type: 'STOP_MARKET',
     side: side,
