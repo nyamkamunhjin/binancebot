@@ -1,4 +1,7 @@
-import { FuturesUserTradeResult } from 'binance-api-node';
+import {
+  FuturesAccountPosition,
+  FuturesUserTradeResult,
+} from 'binance-api-node';
 import Discord from 'discord.js';
 import dotenv from 'dotenv';
 import BinanceAPI from '../binance/functions';
@@ -52,9 +55,43 @@ client.on('message', async (message) => {
 });
 
 client.on('message', async (message) => {
+  if (message.content == `!current-position`) {
+    const orders = await BinanceAPI.getOpenOrders();
+
+    const parsedOrders = orders.map((item) => {
+      return {
+        name: `${item.type} (${item.side})`,
+        value: item.type === 'LIMIT' ? item.price : item.stopPrice,
+      };
+    });
+    const newEmbed = new Discord.MessageEmbed()
+      .setTitle(process.env.TRADE_PAIR)
+      .addFields(parsedOrders);
+    message.channel.send(newEmbed);
+  }
+});
+
+client.on('message', async (message) => {
   if (message.content == `!balance`) {
     const balance = await BinanceAPI.getCurrentBalance(process.env.CURRENCY);
-    message.channel.send(`$${parseFloat(balance.balance).toFixed(2)}`);
+
+    const parsedBalance = Object.entries(balance).flatMap(([key, value]) => {
+      if (
+        key === 'balance' ||
+        key === 'crossUnPnl' ||
+        key === 'availableBalance'
+      ) {
+        return {
+          name: key.toLocaleUpperCase(),
+          value: `$${parseFloat(value).toFixed(2)}`,
+        };
+      }
+      return [];
+    });
+    const newEmbed = new Discord.MessageEmbed()
+      .setTitle(process.env.TRADE_PAIR)
+      .addFields(parsedBalance);
+    message.channel.send(newEmbed);
     BinanceAPI.updateBalance(client);
   }
 });

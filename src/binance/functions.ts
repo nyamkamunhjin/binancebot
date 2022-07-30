@@ -382,6 +382,13 @@ const updateBalance = async (client: Discord.Client) => {
   });
 };
 
+const getOpenOrders = async () => {
+  const orders = await binanceClient.futuresOpenOrders({
+    // symbol: (req.query?.pair as string) || 'BTCUSDT',
+  });
+  return orders;
+};
+
 export default {
   checkConnection,
   currentPositions,
@@ -392,4 +399,5 @@ export default {
   getCurrentBalance,
   getTradeHistory,
   updateBalance,
+  getOpenOrders,
 };
