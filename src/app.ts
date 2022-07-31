@@ -127,6 +127,7 @@ app.post('/entry', async (req, res) => {
     return res.json({ success: true });
   } catch (error) {
     console.error(error);
+    BinanceAPI.sendNotifications(JSON.stringify(req.body));
     BinanceAPI.sendNotifications(error.message);
     return res.json({ success: false });
   }
