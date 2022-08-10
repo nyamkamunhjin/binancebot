@@ -12,7 +12,7 @@ dotenv.config();
 const sendNotifications = (message: string) => {
   try {
     axios.post(process.env.DISCORD_WEBHOOK, {
-      content: message,
+      content: `${'```'}${message}${'```'}`,
     });
   } catch (error) {
     console.log(error);
