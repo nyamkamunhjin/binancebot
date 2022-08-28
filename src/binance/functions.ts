@@ -7,6 +7,7 @@ import Binance, {
 } from 'binance-api-node';
 import axios from 'axios';
 import dotenv from 'dotenv';
+import moment from 'moment';
 dotenv.config();
 
 const sendNotifications = (message: string) => {
@@ -389,10 +390,22 @@ const getOpenOrders = async () => {
   return orders;
 };
 
+const getPnl = async () => {
+  const orders = await binanceClient.futuresIncome({
+    symbol: process.env.TRADE_PAIR,
+    startTime: moment().subtract(3, 'month').unix() * 1000,
+    endTime: moment().unix() * 1000,
+    limit: 1000,
+    incomeType: 'REALIZED_PNL',
+  });
+  return orders;
+};
+
 export default {
   checkConnection,
   currentPositions,
   entry,
+  getPnl,
   getPosition,
   sendNotifications,
   setStoploss,

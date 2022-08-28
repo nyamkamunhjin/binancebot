@@ -4,6 +4,7 @@ import {
 } from 'binance-api-node';
 import Discord from 'discord.js';
 import dotenv from 'dotenv';
+import moment from 'moment';
 import BinanceAPI from '../binance/functions';
 export const client = new Discord.Client();
 dotenv.config();
@@ -91,6 +92,27 @@ client.on('message', async (message) => {
     const newEmbed = new Discord.MessageEmbed()
       .setTitle(process.env.TRADE_PAIR)
       .addFields(parsedBalance);
+    message.channel.send(newEmbed);
+    BinanceAPI.updateBalance(client);
+  }
+});
+
+client.on('message', async (message) => {
+  if (message.content == `!pnl`) {
+    const incomeList = await BinanceAPI.getPnl();
+
+    const fields = incomeList.map((item) => ({
+      name: moment(item.time).format('YYYY/MM/DD HH:MM'),
+      value: `${
+        parseFloat(item.income) > 0
+          ? `✅ $${parseFloat(item.income).toFixed(2)}`
+          : `❌ $${parseFloat(item.income).toFixed(2)}`
+      }`,
+    }));
+
+    const newEmbed = new Discord.MessageEmbed()
+      .setTitle(`${process.env.BOT_NAME} (${process.env.TRADE_PAIR})`)
+      .addFields(fields);
     message.channel.send(newEmbed);
     BinanceAPI.updateBalance(client);
   }

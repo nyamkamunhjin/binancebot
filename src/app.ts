@@ -40,7 +40,7 @@ app.options('*', cors());
 
 app.get('/', async (_req, res) => {
   res.json({
-    api: true,
+    name: process.env.BOT_NAME,
     binance_api: await binanceClient.futuresPing(),
     currency: process.env.CURRENCY,
     trade_pair: process.env.TRADE_PAIR,

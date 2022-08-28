@@ -3,7 +3,6 @@ import BinanceAPI from '../binance/functions';
 import Binance from 'binance-api-node';
 import dotenv from 'dotenv';
 import moment from 'moment';
-import functions from '../binance/functions';
 dotenv.config();
 
 /**
@@ -73,6 +72,33 @@ const getBalance = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
+const getIncomeHistory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    let futuresIncome = await binanceClient.futuresIncome({
+      symbol: req.query.pair as string,
+      startTime: new Date(req.query.start_time as string).getTime(),
+      endTime: new Date(req.query.end_time as string).getTime(),
+      limit: parseInt(req.query.limit as string, 10),
+      incomeType: 'REALIZED_PNL',
+    });
+
+    const dateReadAbleIncome = futuresIncome.map((item) => {
+      (item as any).date = moment(item.time).format('YYYY-MM-DD HH:MM');
+      return item;
+    });
+
+    return res.json(dateReadAbleIncome);
+  } catch (error) {
+    console.error(error);
+    BinanceAPI.sendNotifications(error.message);
+    return res.json({ success: false });
+  }
+};
+
 /**
  * BindingType routes
  *
@@ -84,6 +110,7 @@ export const StatsContoller = () => {
   router.get('/trades', getStats);
   router.get('/balance', getBalance);
   router.get('/orders', getOrders);
+  router.get('/income', getIncomeHistory);
 
   return router;
 };
