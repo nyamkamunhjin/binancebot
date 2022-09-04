@@ -1,4 +1,3 @@
-import Discord from 'discord.js';
 import Binance, {
   FuturesAccountPosition,
   FuturesUserTradeResult,
@@ -9,6 +8,14 @@ import axios from 'axios';
 import dotenv from 'dotenv';
 import moment from 'moment';
 dotenv.config();
+
+const binanceClient = Binance({
+  apiKey: process.env.BINANCE_API_KEY,
+  apiSecret: process.env.BINANCE_SECRET_KEY,
+  getTime: () => new Date().getTime(),
+  httpFutures: 'https://testnet.binancefuture.com',
+  wsFutures: 'wss://stream.binancefuture.com',
+});
 
 const sendNotifications = (message: string) => {
   try {
@@ -29,12 +36,6 @@ const countDecimals = (num: number) => {
 const convertToPrecision = (num: number, precision: number) => {
   return Math.trunc(num * Math.pow(10, precision)) / Math.pow(10, precision);
 };
-
-const binanceClient = Binance({
-  apiKey: process.env.BINANCE_API_KEY,
-  apiSecret: process.env.BINANCE_SECRET_KEY,
-  getTime: () => new Date().getTime(),
-});
 
 const checkConnection = () => {
   return binanceClient.ping();
@@ -62,67 +63,76 @@ const entry = async (
     qty: number;
   }[]
 ) => {
-  /* no entry on current position */
-  const positions = await currentPositions();
-  if (positions.length > 0) {
-    console.log('Cancelled opening position');
-    throw new Error('Currently in a trade.');
-  }
+  try {
+    /* no entry on current position */
+    const positions = await currentPositions();
+    if (positions.length > 0) {
+      console.log('Cancelled opening position');
+      throw new Error('Currently in a trade.');
+    }
 
-  const balances = await binanceClient.futuresAccountBalance();
-  const balance = balances.find((item) => item.asset === process.env.CURRENCY);
+    const balances = await binanceClient.futuresAccountBalance();
+    const balance = balances.find(
+      (item) => item.asset === process.env.CURRENCY
+    );
 
-  /* get precisions */
-  const info = await binanceClient.futuresExchangeInfo();
-  const symbolInfo = info.symbols.find((item) => item.symbol === symbol);
-  const { pricePrecision, quantityPrecision } =
-    symbolInfo as unknown as Symbol & {
-      pricePrecision: number;
-      quantityPrecision: number;
+    /* get precisions */
+    const info = await binanceClient.futuresExchangeInfo();
+    const symbolInfo = info.symbols.find((item) => item.symbol === symbol);
+    const { pricePrecision, quantityPrecision } =
+      symbolInfo as unknown as Symbol & {
+        pricePrecision: number;
+        quantityPrecision: number;
+      };
+
+    console.log({ symbolInfo });
+
+    const priceFilter = symbolInfo.filters.find(
+      (item) => item.filterType === 'PRICE_FILTER'
+    );
+    const tickSize = countDecimals(
+      parseFloat((priceFilter as any).tickSize as string)
+    );
+    console.log(symbolInfo.filters);
+    console.log({ tickSize });
+    const leverage = await binanceClient.futuresLeverage({
+      symbol: symbol,
+      leverage: setLeverage,
+    });
+
+    const trade = await binanceClient.futuresTrades({
+      symbol: symbol,
+      limit: 1,
+    });
+
+    /* added 0.99 multiplication due to margin being insufficient */
+    const qty = convertToPrecision(
+      ((parseFloat(balance.availableBalance) * leverage.leverage) /
+        parseFloat(trade[0].price)) *
+        0.5,
+      quantityPrecision
+    );
+
+    console.log({
+      qty,
+      balance: balance.availableBalance,
+      leverage: leverage.leverage,
+      leveragedBalance:
+        parseFloat(balance.availableBalance) * leverage.leverage,
+      price: trade[0].price,
+      quantityPrecision,
+    });
+
+    const entryOrder: NewFuturesOrder = {
+      symbol: symbol,
+      type: 'MARKET',
+      side: side,
+      quantity: `${qty}`,
     };
 
-  console.log({ symbolInfo });
+    // entry
+    let origQty: number = 0;
 
-  const priceFilter = symbolInfo.filters.find(
-    (item) => item.filterType === 'PRICE_FILTER'
-  );
-  const tickSize = countDecimals(
-    parseFloat((priceFilter as any).tickSize as string)
-  );
-  console.log(symbolInfo.filters);
-  console.log({ tickSize });
-  const leverage = await binanceClient.futuresLeverage({
-    symbol: symbol,
-    leverage: setLeverage,
-  });
-
-  const trade = await binanceClient.futuresTrades({ symbol: symbol, limit: 1 });
-
-  /* added 0.99 multiplication due to margin being insufficient */
-  const qty = convertToPrecision(
-    (parseFloat(balance.availableBalance) * 0.95 * leverage.leverage) /
-      parseFloat(trade[0].price),
-    quantityPrecision
-  );
-
-  console.log({
-    qty,
-    balance: balance.balance,
-    leverage: leverage.leverage,
-    price: trade[0].price,
-    quantityPrecision,
-  });
-
-  const entryOrder: NewFuturesOrder = {
-    symbol: symbol,
-    type: 'MARKET',
-    side: side,
-    quantity: `${qty}`,
-  };
-
-  // entry
-  let origQty: number = 0;
-  try {
     const executedEntryOrder = await binanceClient.futuresOrder(entryOrder);
     console.log('ENTRY');
     console.log({ entry: executedEntryOrder });
@@ -133,36 +143,28 @@ const entry = async (
         executedEntryOrder.price
       },  PartialProfits: ${JSON.stringify(partialProfits)}`
     );
-  } catch (error) {
-    console.error(error);
-    sendNotifications(error.message);
-  }
 
-  // stoploss
-  let currentPosition: FuturesAccountPosition;
-  try {
+    // stoploss
+    let currentPosition: FuturesAccountPosition;
+
     while (currentPosition === undefined)
       currentPosition = await getPosition(symbol);
-  } catch (error) {
-    console.error(error);
-    sendNotifications(error.message);
-  }
 
-  let price =
-    parseFloat(entryPrice) +
-    parseFloat(entryPrice) * stoploss * (side === 'BUY' ? -1 : 1);
+    let price =
+      parseFloat(entryPrice) +
+      parseFloat(entryPrice) * stoploss * (side === 'BUY' ? -1 : 1);
 
-  const currentQty = Math.abs(parseFloat(currentPosition.positionAmt));
+    const currentQty = Math.abs(parseFloat(currentPosition.positionAmt));
 
-  const stopLossOrder: NewFuturesOrder = {
-    symbol: symbol,
-    stopPrice: convertToPrecision(price, tickSize) as any,
-    closePosition: 'true',
-    type: 'STOP_MARKET',
-    side: side === 'BUY' ? 'SELL' : 'BUY',
-    quantity: `${currentQty}`,
-  };
-  try {
+    const stopLossOrder: NewFuturesOrder = {
+      symbol: symbol,
+      stopPrice: convertToPrecision(price, tickSize) as any,
+      closePosition: 'true',
+      type: 'STOP_MARKET',
+      side: side === 'BUY' ? 'SELL' : 'BUY',
+      quantity: `${currentQty}`,
+    };
+
     const executedStopLossOrder = await binanceClient.futuresOrder(
       stopLossOrder
     );
@@ -174,70 +176,62 @@ const entry = async (
     console.log('STOPLOSS');
     console.log({ executedStopLossOrder });
     console.log('--------');
-  } catch (error) {
-    console.error(error);
-    sendNotifications(error.message);
-  }
 
-  // takeprofit
+    // takeprofit
 
-  // set take_profit order
-  price =
-    parseFloat(entryPrice) +
-    parseFloat(entryPrice) * takeProfit * (side === 'BUY' ? 1 : -1);
-  const takeProfitOrder: NewFuturesOrder = {
-    symbol: symbol,
-    stopPrice: convertToPrecision(price, tickSize) as any,
-    closePosition: 'true',
-    type: 'TAKE_PROFIT_MARKET',
-    side: side === 'BUY' ? 'SELL' : 'BUY',
-    quantity: `${currentQty}`,
-  };
-  try {
+    // set take_profit order
+    price =
+      parseFloat(entryPrice) +
+      parseFloat(entryPrice) * takeProfit * (side === 'BUY' ? 1 : -1);
+    const takeProfitOrder: NewFuturesOrder = {
+      symbol: symbol,
+      stopPrice: convertToPrecision(price, tickSize) as any,
+      closePosition: 'true',
+      type: 'TAKE_PROFIT_MARKET',
+      side: side === 'BUY' ? 'SELL' : 'BUY',
+      quantity: `${currentQty}`,
+    };
+
     const executedTakeProfitOrder = await binanceClient.futuresOrder(
       takeProfitOrder
     );
     console.log({ executedTakeProfitOrder });
-  } catch (error) {
-    console.error(error);
-  }
 
-  const previousQtys: number[] = [];
-  partialProfits.forEach(async (item) => {
-    const price =
-      parseFloat(entryPrice) +
-      parseFloat(entryPrice) *
-        takeProfit *
-        (side === 'BUY' ? 1 : -1) *
-        item.where;
+    const previousQtys: number[] = [];
+    partialProfits.forEach(async (item) => {
+      const price =
+        parseFloat(entryPrice) +
+        parseFloat(entryPrice) *
+          takeProfit *
+          (side === 'BUY' ? 1 : -1) *
+          item.where;
 
-    let qty = convertToPrecision(currentQty * item.qty, quantityPrecision);
+      let qty = convertToPrecision(currentQty * item.qty, quantityPrecision);
 
-    if (item.where === 1) {
-      /* to remove any left size in open orders */
-      qty = convertToPrecision(
-        origQty - previousQtys.reduce((acc, cur) => acc + cur, 0),
-        quantityPrecision
-      );
-    } else {
-      previousQtys.push(qty);
-    }
+      if (item.where === 1) {
+        /* to remove any left size in open orders */
+        qty = convertToPrecision(
+          origQty - previousQtys.reduce((acc, cur) => acc + cur, 0),
+          quantityPrecision
+        );
+      } else {
+        previousQtys.push(qty);
+      }
 
-    console.log({
-      price,
-      qty,
-      converted: convertToPrecision(price, pricePrecision),
-    });
+      console.log({
+        price,
+        qty,
+        converted: convertToPrecision(price, pricePrecision),
+      });
 
-    const takeProfitOrder = {
-      symbol: symbol,
-      price: convertToPrecision(price, tickSize) as any,
-      type: 'LIMIT',
-      side: side === 'BUY' ? 'SELL' : 'BUY',
-      quantity: `${qty}`,
-    };
+      const takeProfitOrder = {
+        symbol: symbol,
+        price: convertToPrecision(price, tickSize) as any,
+        type: 'LIMIT',
+        side: side === 'BUY' ? 'SELL' : 'BUY',
+        quantity: `${qty}`,
+      };
 
-    try {
       const executedTakeProfitOrder = await binanceClient.futuresOrder(
         takeProfitOrder as any
       );
@@ -247,10 +241,11 @@ const entry = async (
       // console.log('TAKEPROFIT');
       console.log({ executedTakeProfitOrder });
       // console.log('--------');
-    } catch (error) {
-      console.error(error);
-    }
-  });
+    });
+  } catch (error) {
+    console.error(error);
+    sendNotifications(error.message);
+  }
 };
 
 const setStoploss = async (
@@ -348,41 +343,6 @@ const getTradeHistory = async (symbol: string, limit: number) => {
   });
 };
 
-const updateBalance = async (client: Discord.Client) => {
-  // update discord bot status
-  const balance = await getCurrentBalance(process.env.CURRENCY);
-  const tradeHistory: FuturesUserTradeResult[] = await getTradeHistory(
-    process.env.TRADE_PAIR,
-    1
-  );
-  if (tradeHistory.length === 0) return;
-  if (!tradeHistory[0].realizedPnl) return;
-
-  let percent;
-  if (parseFloat(balance.balance) > parseFloat(tradeHistory[0].realizedPnl)) {
-    percent =
-      (parseFloat(tradeHistory[0].realizedPnl) /
-        (parseFloat(balance.balance) -
-          parseFloat(tradeHistory[0].realizedPnl))) *
-      100;
-  } else {
-    percent =
-      (parseFloat(tradeHistory[0].realizedPnl) /
-        (parseFloat(balance.balance) +
-          parseFloat(tradeHistory[0].realizedPnl))) *
-      100;
-  }
-
-  client.user.setPresence({
-    activity: {
-      type: 'WATCHING',
-      name: `$${parseFloat(balance.balance).toFixed(2)} (${
-        percent > 0 ? '👍' : '👎'
-      }${percent.toPrecision(2)}%)`,
-    },
-  });
-};
-
 const getOpenOrders = async () => {
   const orders = await binanceClient.futuresOpenOrders({
     // symbol: (req.query?.pair as string) || 'BTCUSDT',
@@ -411,6 +371,5 @@ export default {
   setStoploss,
   getCurrentBalance,
   getTradeHistory,
-  updateBalance,
   getOpenOrders,
 };

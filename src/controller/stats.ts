@@ -16,6 +16,8 @@ const binanceClient = Binance({
   apiKey: process.env.BINANCE_API_KEY,
   apiSecret: process.env.BINANCE_SECRET_KEY,
   getTime: () => new Date().getTime(),
+  httpFutures: 'https://testnet.binancefuture.com',
+  wsFutures: 'wss://stream.binancefuture.com',
 });
 
 const getStats = async (req: Request, res: Response, next: NextFunction) => {
@@ -40,15 +42,8 @@ const getStats = async (req: Request, res: Response, next: NextFunction) => {
 const getOrders = async (req: Request, res: Response, next: NextFunction) => {
   try {
     console.log(req.query?.pair as string);
-    // const orders = await binanceClient.futuresUserTrades({
-    //   symbol: (req.query?.pair as string) || 'BTCUSDT',
-    //   // startTime: moment().subtract(1, 'month').unix(),
-    //   // endTime: moment().unix(),
-    // });
 
-    const orders = await binanceClient.futuresOpenOrders({
-      // symbol: (req.query?.pair as string) || 'BTCUSDT',
-    });
+    const orders = await binanceClient.futuresOpenOrders({});
     return res.json(orders);
   } catch (error) {
     console.error(error);
