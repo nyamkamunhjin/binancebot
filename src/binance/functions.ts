@@ -274,17 +274,25 @@ const setStoploss = async (
   const currentQty = Math.abs(parseFloat(currentPosition.positionAmt));
 
   let price;
+  // if (type === 'profit_25') {
+  //   price =
+  //     parseFloat(currentPosition.entryPrice) +
+  //     parseFloat(currentPosition.entryPrice) *
+  //       stopLoss *
+  //       (side === 'SELL' ? -1 : 1) *
+  //       0.5;
+  // }
   if (type === 'profit_25') {
-    price =
-      parseFloat(currentPosition.entryPrice) +
-      parseFloat(currentPosition.entryPrice) *
-        stopLoss *
-        (side === 'SELL' ? -1 : 1) *
-        0.5;
+    price = parseFloat(currentPosition.entryPrice);
   }
 
   if (type === 'profit_50') {
-    price = parseFloat(currentPosition.entryPrice);
+    price =
+      parseFloat(currentPosition.entryPrice) +
+      parseFloat(currentPosition.entryPrice) *
+        takeProfit *
+        (side === 'SELL' ? 1 : -1) *
+        0.25;
   }
 
   if (type === 'profit_75') {
@@ -293,7 +301,7 @@ const setStoploss = async (
       parseFloat(currentPosition.entryPrice) *
         takeProfit *
         (side === 'SELL' ? 1 : -1) *
-        0.25;
+        0.5;
   }
 
   const stopLossOrder: NewFuturesOrder = {
