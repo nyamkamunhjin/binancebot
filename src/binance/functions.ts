@@ -1,4 +1,5 @@
 import Discord from 'discord.js';
+import { binanceClient } from '.';
 import Binance, {
   FuturesAccountPosition,
   FuturesUserTradeResult,
@@ -9,6 +10,8 @@ import axios from 'axios';
 import dotenv from 'dotenv';
 import moment from 'moment';
 dotenv.config();
+
+
 
 const sendNotifications = (message: string) => {
   try {
@@ -30,11 +33,6 @@ const convertToPrecision = (num: number, precision: number) => {
   return Math.trunc(num * Math.pow(10, precision)) / Math.pow(10, precision);
 };
 
-const binanceClient = Binance({
-  apiKey: process.env.BINANCE_API_KEY,
-  apiSecret: process.env.BINANCE_SECRET_KEY,
-  getTime: () => new Date().getTime(),
-});
 
 const checkConnection = () => {
   return binanceClient.ping();
@@ -52,7 +50,7 @@ const currentPositions = async () => {
 
 const entry = async (
   symbol: string,
-  setLeverage: number,
+  risk: number,
   entryPrice: string,
   side: OrderSide_LT,
   stoploss: number,
@@ -91,19 +89,23 @@ const entry = async (
   );
   console.log(symbolInfo.filters);
   console.log({ tickSize });
+
+  const trade = await binanceClient.futuresTrades({ symbol: symbol, limit: 1 });
+  // calculate qty from risk $ amount
+  const amount = (risk / stoploss)
+  const qty = convertToPrecision(amount / parseFloat(trade[0].price), quantityPrecision)
+   
+  const setLeverage = Math.round(risk / parseFloat(balance.availableBalance)) || 1
+
+  console.log({ setLeverage, qty })
+
+
   const leverage = await binanceClient.futuresLeverage({
     symbol: symbol,
     leverage: setLeverage,
   });
 
-  const trade = await binanceClient.futuresTrades({ symbol: symbol, limit: 1 });
-
-  /* added 0.99 multiplication due to margin being insufficient */
-  const qty = convertToPrecision(
-    (parseFloat(balance.availableBalance) * 0.95 * leverage.leverage) /
-      parseFloat(trade[0].price),
-    quantityPrecision
-  );
+  
 
   console.log({
     qty,
@@ -129,8 +131,7 @@ const entry = async (
     console.log('-----');
     origQty = parseFloat(executedEntryOrder.origQty);
     sendNotifications(
-      `Entry ${symbol} Leverage: ${setLeverage}, Side: ${side}, Price: ${
-        executedEntryOrder.price
+      `Entry ${symbol} Leverage: ${setLeverage}, Side: ${side}, Price: ${executedEntryOrder.price
       },  PartialProfits: ${JSON.stringify(partialProfits)}`
     );
   } catch (error) {
@@ -161,6 +162,7 @@ const entry = async (
     type: 'STOP_MARKET',
     side: side === 'BUY' ? 'SELL' : 'BUY',
     quantity: `${currentQty}`,
+    workingType: 'CONTRACT_PRICE',
   };
   try {
     const executedStopLossOrder = await binanceClient.futuresOrder(
@@ -207,9 +209,9 @@ const entry = async (
     const price =
       parseFloat(entryPrice) +
       parseFloat(entryPrice) *
-        takeProfit *
-        (side === 'BUY' ? 1 : -1) *
-        item.where;
+      takeProfit *
+      (side === 'BUY' ? 1 : -1) *
+      item.where;
 
     let qty = convertToPrecision(currentQty * item.qty, quantityPrecision);
 
@@ -290,18 +292,18 @@ const setStoploss = async (
     price =
       parseFloat(currentPosition.entryPrice) +
       parseFloat(currentPosition.entryPrice) *
-        takeProfit *
-        (side === 'SELL' ? 1 : -1) *
-        0.25;
+      takeProfit *
+      (side === 'SELL' ? 1 : -1) *
+      0.25;
   }
 
   if (type === 'profit_75') {
     price =
       parseFloat(currentPosition.entryPrice) +
       parseFloat(currentPosition.entryPrice) *
-        takeProfit *
-        (side === 'SELL' ? 1 : -1) *
-        0.5;
+      takeProfit *
+      (side === 'SELL' ? 1 : -1) *
+      0.5;
   }
 
   const stopLossOrder: NewFuturesOrder = {
@@ -384,9 +386,8 @@ const updateBalance = async (client: Discord.Client) => {
   client.user.setPresence({
     activity: {
       type: 'WATCHING',
-      name: `$${parseFloat(balance.balance).toFixed(2)} (${
-        percent > 0 ? '👍' : '👎'
-      }${percent.toPrecision(2)}%)`,
+      name: `$${parseFloat(balance.balance).toFixed(2)} (${percent > 0 ? '👍' : '👎'
+        }${percent.toPrecision(2)}%)`,
     },
   });
 };

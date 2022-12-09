@@ -1,5 +1,5 @@
 import cors from 'cors';
-import Binance from 'binance-api-node';
+import { binanceClient } from './binance';
 import BinanceAPI from './binance/functions';
 import { client } from './discord/bot';
 import dotenv from 'dotenv';
@@ -9,11 +9,6 @@ import express, { Router } from 'express';
 
 import { StatsContoller } from './controller';
 
-const binanceClient = Binance({
-  apiKey: process.env.BINANCE_API_KEY,
-  apiSecret: process.env.BINANCE_SECRET_KEY,
-  getTime: () => new Date().getTime(),
-});
 
 /* Routes */
 const router = Router();
@@ -26,7 +21,7 @@ interface BodyInterface {
   price: string;
   symbol: string;
   entry: string;
-  leverage: number;
+  risk: number;
   stopLoss: number;
   takeProfit: number;
   partialProfits: { where: number; qty: number }[];
@@ -53,7 +48,7 @@ app.post('/entry', async (req, res) => {
     side,
     symbol,
     price,
-    leverage,
+    risk,
     entry,
     stopLoss,
     takeProfit,
@@ -115,7 +110,7 @@ app.post('/entry', async (req, res) => {
 
     await BinanceAPI.entry(
       symbol,
-      leverage || 1,
+      risk,
       price,
       side === 'buy' ? 'BUY' : 'SELL',
       stopLoss,
@@ -160,17 +155,8 @@ binanceClient.ws.futuresUser(async (msg) => {
 // setInterval(() => BinanceAPI.updateBalance(client), 1000 * 60);
 const main = async () => {
   /* test only */
-  let currentPosition: any;
   try {
-    let count = 0;
-    while (currentPosition === undefined) {
-      count++;
-      console.log('trying', count);
-      currentPosition = await BinanceAPI.getPosition(process.env.TRADE_PAIR);
-      if (count === 10) {
-        currentPosition = 1;
-      }
-    }
+
   } catch (error) {
     console.error(error);
   }
