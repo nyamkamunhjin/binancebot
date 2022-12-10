@@ -94,8 +94,10 @@ const entry = async (
   // calculate qty from risk $ amount
   const amount = (risk / stoploss)
   const qty = convertToPrecision(amount / parseFloat(trade[0].price), quantityPrecision)
-   
-  const setLeverage = Math.round(risk / parseFloat(balance.availableBalance)) || 1
+
+  console.log({ leverage: amount / parseFloat(balance.availableBalance) })
+
+  const setLeverage = Math.round((amount / parseFloat(balance.availableBalance) + 1))
 
   console.log({ setLeverage, qty })
 
@@ -105,7 +107,7 @@ const entry = async (
     leverage: setLeverage,
   });
 
-  
+
 
   console.log({
     qty,
@@ -361,7 +363,7 @@ const getTradeHistory = async (symbol: string, limit: number) => {
 const updateBalance = async (client: Discord.Client) => {
   console.log('Update balance')
 
-  
+
   // update discord bot status
   const balance = await getCurrentBalance(process.env.CURRENCY);
   const tradeHistory: FuturesUserTradeResult[] = await getTradeHistory(
