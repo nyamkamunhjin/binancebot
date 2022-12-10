@@ -385,7 +385,7 @@ const updateBalance = async (client: Discord.Client) => {
   }
 
 
-  client.user.setPresence({
+  client.user?.setPresence({
     activities: [{
       type: ActivityType.Watching,
       name: `$${parseFloat(balance.balance).toFixed(2)} (${percent > 0 ? '👍' : '👎'

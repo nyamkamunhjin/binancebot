@@ -147,7 +147,7 @@ binanceClient.ws.futuresUser(async (msg) => {
 
     // update discord bot status
     const balance = await BinanceAPI.getCurrentBalance(process.env.CURRENCY);
-    client.user.setPresence({
+    client.user?.setPresence({
       activities: [{
         type: ActivityType.Watching,
         name: `$${parseFloat(balance.balance).toFixed(2)}`,

@@ -5,7 +5,6 @@ dotenv.config();
 
 
 import { CacheType, Interaction, SlashCommandBuilder } from 'discord.js';
-import { FuturesBalanceResult, FuturesUserTradeResult } from 'binance-api-node';
 
 module.exports = {
 	data: new SlashCommandBuilder()

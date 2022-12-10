@@ -12,7 +12,7 @@ dotenv.config();
 
 const commands: { data: SlashCommandBuilder, execute: (interaction:  Interaction<CacheType>) => void }[] = []
 // Grab all the command files from the commands directory you created earlier
-const commandFiles = fs.readdirSync('src/discord/commands').filter(file => file.endsWith('.ts'));
+const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.ts') || file.endsWith('.js'));
 
 // and deploy your commands!
 export const initializeSlashCommands = async () => {
