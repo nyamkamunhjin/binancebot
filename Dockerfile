@@ -9,7 +9,7 @@ COPY . .
 RUN npm run build
 RUN npm prune --production
 
-FROM mhart/alpine-node:slim-14
+FROM node:18
 
 COPY --from=builder /app/built ./built
 COPY --from=builder /app/node_modules ./node_modules
