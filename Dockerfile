@@ -1,4 +1,4 @@
-FROM mhart/alpine-node:16 AS builder
+FROM node:18-alpine AS builder
 WORKDIR /app
 COPY package.json ./
 RUN yarn install --frozen-lockfile
