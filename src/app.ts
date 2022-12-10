@@ -161,10 +161,9 @@ binanceClient.ws.futuresUser(async (msg) => {
 const main = async () => {
   /* test only */
   try {
-    BinanceAPI.updateBalance(client)
   } catch (error) {
     console.error(error);
   }
 };
 
-main();
+// main();
