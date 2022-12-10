@@ -1,13 +1,17 @@
 import cors from 'cors';
 import { binanceClient } from './binance';
 import BinanceAPI from './binance/functions';
-import { client } from './discord/bot';
+
+import { client, initializeSlashCommands } from './discord/bot';
 import dotenv from 'dotenv';
 dotenv.config();
+
+initializeSlashCommands()
 
 import express, { Router } from 'express';
 
 import { StatsContoller } from './controller';
+import { ActivityType } from 'discord.js';
 
 
 /* Routes */
@@ -144,22 +148,23 @@ binanceClient.ws.futuresUser(async (msg) => {
     // update discord bot status
     const balance = await BinanceAPI.getCurrentBalance(process.env.CURRENCY);
     client.user.setPresence({
-      activity: {
-        type: 'WATCHING',
+      activities: [{
+        type: ActivityType.Watching,
         name: `$${parseFloat(balance.balance).toFixed(2)}`,
-      },
+      }],
     });
+
   }
 });
 
-// setInterval(() => BinanceAPI.updateBalance(client), 1000 * 60);
+// setI nterval(() => BinanceAPI.updateBalance(client), 1000 * 60);
 const main = async () => {
   /* test only */
   try {
-
+    BinanceAPI.updateBalance(client)
   } catch (error) {
     console.error(error);
   }
 };
 
-// main();
+main();

@@ -1,4 +1,4 @@
-import Discord from 'discord.js';
+import Discord, { ActivityType } from 'discord.js';
 import { binanceClient } from '.';
 import Binance, {
   FuturesAccountPosition,
@@ -359,36 +359,38 @@ const getTradeHistory = async (symbol: string, limit: number) => {
 };
 
 const updateBalance = async (client: Discord.Client) => {
+  console.log('Update balance')
+
+  
   // update discord bot status
   const balance = await getCurrentBalance(process.env.CURRENCY);
   const tradeHistory: FuturesUserTradeResult[] = await getTradeHistory(
     process.env.TRADE_PAIR,
     1
   );
-  if (tradeHistory.length === 0) return;
-  if (!tradeHistory[0].realizedPnl) return;
 
   let percent;
-  if (parseFloat(balance.balance) > parseFloat(tradeHistory[0].realizedPnl)) {
+  if (parseFloat(balance.balance) > parseFloat(tradeHistory?.[0]?.realizedPnl || '0')) {
     percent =
-      (parseFloat(tradeHistory[0].realizedPnl) /
+      (parseFloat(tradeHistory?.[0]?.realizedPnl || '0') /
         (parseFloat(balance.balance) -
-          parseFloat(tradeHistory[0].realizedPnl))) *
+          parseFloat(tradeHistory?.[0]?.realizedPnl || '0'))) *
       100;
   } else {
     percent =
-      (parseFloat(tradeHistory[0].realizedPnl) /
+      (parseFloat(tradeHistory?.[0]?.realizedPnl || '0') /
         (parseFloat(balance.balance) +
-          parseFloat(tradeHistory[0].realizedPnl))) *
+          parseFloat(tradeHistory?.[0]?.realizedPnl || '0'))) *
       100;
   }
 
+
   client.user.setPresence({
-    activity: {
-      type: 'WATCHING',
+    activities: [{
+      type: ActivityType.Watching,
       name: `$${parseFloat(balance.balance).toFixed(2)} (${percent > 0 ? '👍' : '👎'
         }${percent.toPrecision(2)}%)`,
-    },
+    }],
   });
 };
 

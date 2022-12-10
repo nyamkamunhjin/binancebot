@@ -1,8 +1,8 @@
 {
-  "name": "discordbot",
+  "name": "binance-trading-bot",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
@@ -14,11 +14,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@discordjs/opus": "^0.5.0",
     "axios": "^0.21.1",
     "binance-api-node": "^0.11.47",
     "cors": "^2.8.5",
-    "discord.js": "^12.5.3",
+    "discord.js": "^14.7.1",
     "dotenv": "^9.0.1",
     "express": "^4.17.3",
     "moment": "^2.29.2",
@@ -34,6 +33,6 @@
     "typescript": "^4.2.4"
   },
   "engines": {
-    "node": "14.x"
+    "node": "16.x"
   }
 }
