@@ -138,6 +138,7 @@ app.listen(process.env.PORT, () =>
 
 binanceClient.ws.futuresUser(async (msg) => {
   /* cancel all orders if there's no position */
+  console.log({ msg })
   const positions = await BinanceAPI.currentPositions();
   if (positions.length === 0) {
     console.log('Cancelling all open orders');
@@ -156,6 +157,31 @@ binanceClient.ws.futuresUser(async (msg) => {
 
   }
 });
+
+setInterval(() => {
+  const looper = async () => {
+    const positions = await BinanceAPI.currentPositions();
+    if (positions.length === 0) {
+      console.log('Cancelling all open orders');
+      await binanceClient.futuresCancelAllOpenOrders({
+        symbol: currentSymbol,
+      });
+
+      // update discord bot status
+      const balance = await BinanceAPI.getCurrentBalance(process.env.CURRENCY);
+      client.user?.setPresence({
+        activities: [{
+          type: ActivityType.Watching,
+          name: `$${parseFloat(balance.balance).toFixed(2)}`,
+        }],
+      });
+
+    }
+  }
+
+  looper()
+}, 1000 * 60 * 5) // every 5 minute
+
 
 // setI nterval(() => BinanceAPI.updateBalance(client), 1000 * 60);
 const main = async () => {
