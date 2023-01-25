@@ -92,7 +92,7 @@ const entry = async (
 
   const trade = await binanceClient.futuresTrades({ symbol: symbol, limit: 1 });
   // calculate qty from risk $ amount
-  const amount = (risk / stoploss)
+  const amount = ((parseFloat(balance.balance) * risk) / stoploss)
   const qty = convertToPrecision(amount / parseFloat(trade[0].price), quantityPrecision)
 
   console.log({ leverage: amount / parseFloat(balance.availableBalance) })
