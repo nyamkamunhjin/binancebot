@@ -13,90 +13,91 @@ dotenv.config();
  */
 
 const binanceClient = Binance({
-  apiKey: process.env.BINANCE_API_KEY,
-  apiSecret: process.env.BINANCE_SECRET_KEY,
-  getTime: () => new Date().getTime(),
+    apiKey: process.env.BINANCE_API_KEY,
+    apiSecret: process.env.BINANCE_SECRET_KEY,
+    getTime: () => new Date().getTime(),
 });
 
 const getStats = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const trades = await BinanceAPI.getTradeHistory(process.env.TRADE_PAIR, 1);
-    if (trades.length === 0) return res.json({ success: false });
+    try {
+        const trades = await BinanceAPI.getTradeHistory(
+            process.env.TRADE_PAIR,
+            1
+        );
+        if (trades.length === 0) return res.json({ success: false });
 
-    return res.json(
-      trades.map((each) => ({
-        realizedPnL: each.realizedPnl,
-        commission: each.commission,
-        date: new Date(each.time),
-      }))
-    );
-  } catch (error) {
-    console.error(error);
-    BinanceAPI.sendNotifications(error.message);
-    return res.json({ success: false });
-  }
+        return res.json(
+            trades.map((each) => ({
+                realizedPnL: each.realizedPnl,
+                commission: each.commission,
+                date: new Date(each.time),
+            }))
+        );
+    } catch (error) {
+        console.error(error);
+        return res.json({ success: false });
+    }
 };
 
 const getOrders = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    console.log(req.query?.pair as string);
-    // const orders = await binanceClient.futuresUserTrades({
-    //   symbol: (req.query?.pair as string) || 'BTCUSDT',
-    //   // startTime: moment().subtract(1, 'month').unix(),
-    //   // endTime: moment().unix(),
-    // });
+    try {
+        console.log(req.query?.pair as string);
+        // const orders = await binanceClient.futuresUserTrades({
+        //   symbol: (req.query?.pair as string) || 'BTCUSDT',
+        //   // startTime: moment().subtract(1, 'month').unix(),
+        //   // endTime: moment().unix(),
+        // });
 
-    const orders = await binanceClient.futuresOpenOrders({
-      // symbol: (req.query?.pair as string) || 'BTCUSDT',
-    });
-    return res.json(orders);
-  } catch (error) {
-    console.error(error);
-    BinanceAPI.sendNotifications(error.message);
-    return res.json({ success: false });
-  }
+        const orders = await binanceClient.futuresOpenOrders({
+            // symbol: (req.query?.pair as string) || 'BTCUSDT',
+        });
+        return res.json(orders);
+    } catch (error) {
+        console.error(error);
+
+        return res.json({ success: false });
+    }
 };
 
 const getBalance = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const balances = await binanceClient.futuresAccountBalance();
-    const balance = balances.find(
-      (item) => item.asset === process.env.CURRENCY
-    );
+    try {
+        const balances = await binanceClient.futuresAccountBalance();
+        const balance = balances.find(
+            (item) => item.asset === process.env.CURRENCY
+        );
 
-    return res.json(balance);
-  } catch (error) {
-    console.error(error);
-    BinanceAPI.sendNotifications(error.message);
-    return res.json({ success: false });
-  }
+        return res.json(balance);
+    } catch (error) {
+        console.error(error);
+
+        return res.json({ success: false });
+    }
 };
 
 const getIncomeHistory = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
+    req: Request,
+    res: Response,
+    next: NextFunction
 ) => {
-  try {
-    let futuresIncome = await binanceClient.futuresIncome({
-      symbol: req.query.pair as string,
-      startTime: new Date(req.query.start_time as string).getTime(),
-      endTime: new Date(req.query.end_time as string).getTime(),
-      limit: parseInt(req.query.limit as string, 10),
-      incomeType: 'REALIZED_PNL',
-    });
+    try {
+        let futuresIncome = await binanceClient.futuresIncome({
+            symbol: req.query.pair as string,
+            startTime: new Date(req.query.start_time as string).getTime(),
+            endTime: new Date(req.query.end_time as string).getTime(),
+            limit: parseInt(req.query.limit as string, 10),
+            incomeType: 'REALIZED_PNL',
+        });
 
-    const dateReadAbleIncome = futuresIncome.map((item) => {
-      (item as any).date = moment(item.time).format('YYYY-MM-DD HH:MM');
-      return item;
-    });
+        const dateReadAbleIncome = futuresIncome.map((item) => {
+            (item as any).date = moment(item.time).format('YYYY-MM-DD HH:MM');
+            return item;
+        });
 
-    return res.json(dateReadAbleIncome);
-  } catch (error) {
-    console.error(error);
-    BinanceAPI.sendNotifications(error.message);
-    return res.json({ success: false });
-  }
+        return res.json(dateReadAbleIncome);
+    } catch (error) {
+        console.error(error);
+        return res.json({ success: false });
+    }
 };
 
 /**
@@ -106,11 +107,11 @@ const getIncomeHistory = async (
  * @createdDate 01/28/2020
  */
 export const StatsContoller = () => {
-  const router = Router();
-  router.get('/trades', getStats);
-  router.get('/balance', getBalance);
-  router.get('/orders', getOrders);
-  router.get('/income', getIncomeHistory);
+    const router = Router();
+    router.get('/trades', getStats);
+    router.get('/balance', getBalance);
+    router.get('/orders', getOrders);
+    router.get('/income', getIncomeHistory);
 
-  return router;
+    return router;
 };
